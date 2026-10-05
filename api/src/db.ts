@@ -48,8 +48,19 @@ export async function wakeVm(env: Env) {
   await ensureVm(env).catch((e) => console.error("wake VM:", e));
 }
 
+// A job runs once per request: the worker acks its message on pickup, so nothing is ever redelivered.
+// A render that dies with its VM is failed here (not re-run); POST /v1/jobs/:id/retry is the only way to run it again.
+const STALE_RUNNING = "90 minutes";
+export const failStaleRunning = (env: Env) =>
+  db(env)`
+    UPDATE jobs SET status = 'failed', updated_at = now(),
+      error = 'the render was interrupted (the worker stopped mid-job) — retry to run it again'
+    WHERE status = 'running' AND updated_at < now() - ${STALE_RUNNING}::interval
+    RETURNING id`;
+
 // the every-minute safety net: nothing pending → one KV read, no database, no GCP call
-export async function sweep(env: Env) {
+export async function sweep(env: Env, scheduledTime = Date.now()) {
+  if (new Date(scheduledTime).getUTCMinutes() % 15 === 0) await failStaleRunning(env).catch((e) => console.error("stale jobs:", e));
   if (!(await env.STATE.get("pending"))) return;
   const queued = (await db(env)`SELECT 1 FROM jobs WHERE status = 'queued' LIMIT 1`).length > 0;
   if (!queued) return env.STATE.delete("pending");
@@ -64,7 +75,7 @@ export async function createJob(env: Env, auth: Auth, engine: Engine, input: unk
     await env.JOBS.send({ id: job.id, user_id: job.user_id, engine, input });
   } catch (e) {
     // the row exists but no worker will ever see it: fail it visibly instead of leaving it queued forever
-    await updateJob(env, job.id, { status: "failed", error: `could not queue the job: ${e}` });
+    await db(env)`UPDATE jobs SET status = 'failed', error = ${`could not queue the job: ${e}`}, updated_at = now() WHERE id = ${job.id}`;
     throw e;
   }
   return job;
@@ -81,17 +92,27 @@ export async function getJob(env: Env, jobId: string, userId?: string): Promise<
 export const listJobs = async (env: Env, userId: string, limit = 50) =>
   (await db(env)`SELECT * FROM jobs WHERE user_id = ${userId} ORDER BY created_at DESC LIMIT ${limit}`) as Job[];
 
-export type JobUpdate = { status: JobStatus; error?: string; cost_usd?: number };
+export type JobUpdate = { status: "done" | "failed"; error?: string; cost_usd?: number };
 
-// cost_usd from the VM is this attempt's spend: it is added to what earlier attempts cost
+// The worker takes a job: queued → running, atomically. Anything else (gone, already taken, done, failed) → null,
+// and the worker skips it — so a stray or duplicate message can never start a second run.
+export async function claimJob(env: Env, jobId: string): Promise<Job | null> {
+  if (!isUuid(jobId)) return null;
+  const [j] = await db(env)`
+    UPDATE jobs SET status = 'running', attempts = attempts + 1, error = NULL, updated_at = now()
+    WHERE id = ${jobId} AND status = 'queued' RETURNING *`;
+  return (j as Job) ?? null;
+}
+
+// running → done | failed. cost_usd from the VM is this attempt's spend: added to what earlier attempts cost.
+// Only a running job can finish, so a late report can't overwrite a job that was failed or retried meanwhile.
 export const updateJob = (env: Env, jobId: string, u: JobUpdate) =>
   db(env)`
     UPDATE jobs SET status = ${u.status},
       error = ${u.status === "failed" ? u.error ?? "failed" : null},
       cost_usd = cost_usd + ${u.cost_usd ?? 0},
-      attempts = attempts + ${u.status === "running" ? 1 : 0},
       updated_at = now()
-    WHERE id = ${jobId}`;
+    WHERE id = ${jobId} AND status = 'running'`;
 
 export async function requeue(env: Env, job: Job, draft: Draft | null) {
   await db(env)`UPDATE jobs SET status = 'queued', error = NULL, updated_at = now() WHERE id = ${job.id}`;

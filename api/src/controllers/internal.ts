@@ -1,10 +1,18 @@
 import type { Context } from "hono";
-import { getJob, saveDraft, saveVideo, updateJob, type JobUpdate } from "../db";
+import { claimJob, getJob, saveDraft, saveVideo, updateJob, type JobUpdate } from "../db";
 import type { App } from "../types";
 
-// PATCH /internal/jobs/:id  { status, error?, cost_usd? }
+// POST /internal/jobs/:id/claim → 200 the job is now running and this worker owns it · 409 skip it (gone, taken, finished)
+export async function claim(c: Context<App>) {
+  const job = await claimJob(c.env, c.req.param("id")!);
+  return job ? c.json({ ok: true, attempts: job.attempts }) : c.json({ error: "job is not queued" }, 409);
+}
+
+// PATCH /internal/jobs/:id  { status: done | failed, error?, cost_usd? }
 export async function update(c: Context<App>) {
-  await updateJob(c.env, c.req.param("id")!, await c.req.json<JobUpdate>());
+  const u = await c.req.json<JobUpdate>();
+  if (u.status !== "done" && u.status !== "failed") return c.json({ error: "status must be done or failed (claim to start)" }, 400);
+  await updateJob(c.env, c.req.param("id")!, u);
   return c.json({ ok: true });
 }
 

@@ -32,6 +32,7 @@ export const adminRoutes = new Hono<App>()
 // the Google VM
 export const internalRoutes = new Hono<App>()
   .use(requireInternal)
+  .post("/jobs/:id/claim", internal.claim)
   .patch("/jobs/:id", internal.update)
   .put("/jobs/:id/video", internal.putVideo)
   .put("/jobs/:id/draft", internal.putDraft)

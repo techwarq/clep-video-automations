@@ -9,6 +9,15 @@ HEADERS = {"Authorization": f"Bearer {config.INTERNAL_KEY}"}
 BASE = f"{config.API_URL}/internal"
 
 
+def claim(job_id: str) -> bool:
+    """queued → running for this worker. False: the job is gone, taken or finished — skip it."""
+    r = httpx.post(f"{BASE}/jobs/{job_id}/claim", headers=HEADERS)
+    if r.status_code == 409:
+        return False
+    r.raise_for_status()
+    return True
+
+
 def update(job_id: str, status: str, **fields) -> None:
     httpx.patch(f"{BASE}/jobs/{job_id}", headers=HEADERS, json={"status": status, **fields}).raise_for_status()
 

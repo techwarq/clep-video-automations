@@ -17,7 +17,7 @@ app.route("/internal", internalRoutes);
 export default {
   fetch: app.fetch,
   // every minute: jobs still queued but no VM up (it was shutting down, or Spot reclaimed it) → start it
-  async scheduled(_: ScheduledController, env: Env, ctx: ExecutionContext) {
-    ctx.waitUntil(sweep(env));
+  async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
+    ctx.waitUntil(sweep(env, controller.scheduledTime));
   },
 };

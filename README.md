@@ -52,7 +52,7 @@ A user only ever sees their own jobs and videos; a key used for an engine it isn
 
 ## Job lifecycle
 
-`queued → running → done | failed` (→ `POST /retry` → `queued` again)
+`queued → running → done | failed` (→ `POST /retry` → `queued` again — the only way a job runs twice)
 
 1. `POST /v1/motion` → `jobs` row (with `user_id`), message on the `video-jobs` queue.
 2. The VM pulls it, marks it `running` (attempts + 1) and runs the engine, streaming its model spend.
@@ -110,5 +110,7 @@ bash deploy/vm-bootstrap.sh                     # installs Docker
 4. Every minute the API checks the flag: if jobs are still queued and the VM is down (it was shutting down, or
    Spot reclaimed it), it starts it again. With no pending work this is one KV read: no database, no GCP call.
 
-`GET /admin/vm` shows its state; `POST /admin/vm/start` starts it by hand. If Spot reclaims the VM mid-job, the
-job was never acked: it returns to the queue after its 1 h lease and runs again (from its draft if it has one).
+`GET /admin/vm` shows its state; `POST /admin/vm/start` starts it by hand. A job runs once per request:
+the worker claims it (`queued → running`) and acks its message before rendering, so the queue never redelivers it.
+If the VM dies mid-job (Spot reclaim, deploy), the API marks the job `failed` after 90 min of `running`; it runs
+again only on `POST /v1/jobs/:id/retry` (from its draft if it has one).

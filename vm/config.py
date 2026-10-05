@@ -22,4 +22,4 @@ MOTION_BUDGET_USD = os.getenv("MOTION_BUDGET_USD", "1.00")  # hard cap on model 
 
 POLL_SECONDS = 5
 IDLE_EXIT_MINUTES = float(os.getenv("IDLE_EXIT_MINUTES", "0"))  # > 0: exit when the queue stays empty this long (the VM then powers off)
-LEASE_MS = 60 * 60 * 1000  # a job must finish within an hour or it goes back on the queue
+LEASE_MS = 60 * 1000  # only covers pull → claim → ack, which happens before the job runs: a job is never redelivered
