@@ -1,9 +1,13 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { sweep } from "./db";
 import { adminRoutes, internalRoutes, v1 } from "./routes";
 import type { App, Env } from "./types";
 
 const app = new Hono<App>();
+
+// browsers (the Clep dashboard) call /v1 directly with the user's own access key
+app.use("/v1/*", cors({ origin: "*", allowHeaders: ["Authorization", "Content-Type"], allowMethods: ["GET", "POST", "OPTIONS"] }));
 
 app.get("/health", (c) => c.json({ ok: true }));
 app.route("/v1", v1);

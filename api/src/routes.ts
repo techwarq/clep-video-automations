@@ -10,6 +10,8 @@ import type { App } from "./types";
 // clients, with an access key
 export const v1 = new Hono<App>()
   .use(requireUser)
+  // the key matched (requireUser) → who it belongs to and what it may make; the dashboard checks a key with this
+  .get("/me", (c) => c.json({ user_id: c.get("auth").userId, engines: c.get("auth").engines }))
   .post("/reels", engines.create("reels"))
   .post("/motion", engines.create("motion"))
   .get("/jobs", jobs.list)
