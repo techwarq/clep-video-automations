@@ -1,0 +1,76 @@
+{
+ "lessons": [
+  {
+   "text": "Camera scale about center pushes top-placed words off frame at peak push — moved word block lower (y150) to survive 1.16x scale.",
+   "count": 1,
+   "films": [
+    "8f10e219-89b9-4b9d-9ac1-8c293d19a5e6"
+   ],
+   "last": "2026-10-05"
+  },
+  {
+   "text": "Kinetic words overlapped the tall carrier until the carrier was dropped to y640 and words narrowed to a 1200px centered column.",
+   "count": 1,
+   "films": [
+    "8f10e219-89b9-4b9d-9ac1-8c293d19a5e6"
+   ],
+   "last": "2026-10-05"
+  },
+  {
+   "text": "Payoff must land ON the drop: kept landscape cut until 14.05 and bloomed the vertical share card 14.3-14.75 with a carrier size jump.",
+   "count": 1,
+   "films": [
+    "8f10e219-89b9-4b9d-9ac1-8c293d19a5e6"
+   ],
+   "last": "2026-10-05"
+  },
+  {
+   "text": "Opening composer read too small (~45% width) — grew carrier widths to 1060-1220 so subject fills 55-65% of frame.",
+   "count": 1,
+   "films": [
+    "8f10e219-89b9-4b9d-9ac1-8c293d19a5e6"
+   ],
+   "last": "2026-10-05"
+  },
+  {
+   "text": "Camera scale about center pushed top words off frame at peak push — fixed by narrowing words to 1200px column, lowering to y200/300, and steering camera focus cy to 480 during payoff.",
+   "count": 1,
+   "films": [
+    "71de3586-9877-4354-b3b2-db3b136573e2"
+   ],
+   "last": "2026-10-05"
+  },
+  {
+   "text": "Timeline-to-player cross-reveal caused double-exposure frames — fixed by making the old layer leave (13.0-13.4) before the new one enters (13.4-14.2) instead of overlapping at half opacity.",
+   "count": 1,
+   "films": [
+    "71de3586-9877-4354-b3b2-db3b136573e2"
+   ],
+   "last": "2026-10-05"
+  },
+  {
+   "text": "Payoff had no velocity on the drop because the bloom ended exactly at the drop — extended bloom 13.0-15.0 so the carrier is still growing through 14.4, and moved the word change onto the drop.",
+   "count": 1,
+   "films": [
+    "71de3586-9877-4354-b3b2-db3b136573e2"
+   ],
+   "last": "2026-10-05"
+  },
+  {
+   "text": "Player-to-share swap read as a hard cut — staggered word change to 17.4 and made the morph sequential (out 16.8-17.1, in 17.1+) to spread pixel change.",
+   "count": 1,
+   "films": [
+    "71de3586-9877-4354-b3b2-db3b136573e2"
+   ],
+   "last": "2026-10-05"
+  }
+ ],
+ "checks": {
+  "HARD CUTS": {
+   "count": 1,
+   "films": [
+    "71de3586-9877-4354-b3b2-db3b136573e2"
+   ]
+  }
+ }
+}

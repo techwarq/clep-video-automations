@@ -1,0 +1,153 @@
+<!doctype html>
+<!-- Pinterest edit · documentary look. Graph-paper / black grounds that alternate beat to beat,
+     footage always framed (dark rounded frame + corner brackets) or letterboxed, yellow stamp
+     words that slam in on spoken words, black type-slam beats and one hand-built graphic.
+     Plan: narrated beats; media keys per footage beat. CONFIG is per reel; the rest is craft. -->
+<html>
+<head>
+<meta charset="utf-8">
+<script src="data.js"></script>
+<script src="runtime.js"></script>
+<style>
+  :root { --paper: #ece8df; --ink: #111; --yellow: #ffd60a; --night: #121212; }
+  html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: var(--paper); }
+  .layer { position: absolute; inset: 0; }
+  .paper { background-color: var(--paper);
+    background-image: linear-gradient(rgba(17,17,17,.07) 2px, transparent 2px), linear-gradient(90deg, rgba(17,17,17,.07) 2px, transparent 2px),
+      linear-gradient(rgba(17,17,17,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(17,17,17,.035) 1px, transparent 1px);
+    background-size: 180px 180px, 180px 180px, 36px 36px, 36px 36px; }
+  .night { background-color: var(--night);
+    background-image: linear-gradient(rgba(255,255,255,.05) 2px, transparent 2px), linear-gradient(90deg, rgba(255,255,255,.05) 2px, transparent 2px);
+    background-size: 180px 180px; }
+  .black { background: #000; }
+
+  /* framed footage */
+  #frame { position: absolute; left: 90px; top: 330px; width: 900px; height: 1260px; border-radius: 36px;
+    overflow: hidden; background: #000; box-shadow: 0 0 0 12px #161616, 0 30px 60px rgba(0,0,0,.35); }
+  #frame img, #band img { width: 100%; height: 100%; object-fit: cover; }
+  .br { position: absolute; width: 54px; height: 54px; border: 0 solid var(--ink); }
+  #band { position: absolute; left: 0; right: 0; top: 656px; height: 608px; overflow: hidden; }
+
+  /* stamp + type + caption */
+  #stamp { position: absolute; left: 50%; top: 190px; padding: 6px 22px; background: var(--yellow); color: var(--ink);
+    font: 800 92px 'Avenir Next', sans-serif; letter-spacing: -1px; white-space: nowrap; }
+  #slam { position: absolute; left: 0; right: 0; top: 50%; text-align: center; color: #fff;
+    font: 800 150px/1 'Avenir Next', sans-serif; letter-spacing: -3px; }
+  #cap { position: absolute; left: 60px; right: 60px; top: 1720px; text-align: center;
+    font: 800 60px 'Avenir Next', sans-serif; letter-spacing: .5px; text-transform: uppercase; }
+  #cap .em { padding: 0 8px; }
+
+  /* graphic: countdown card */
+  #timer { position: absolute; left: 140px; right: 140px; top: 640px; height: 520px; border-radius: 40px; background: #141414;
+    color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; }
+  #timer .label { font: 800 46px 'Avenir Next', sans-serif; color: var(--yellow); letter-spacing: 1px; }
+  #timer .clock { font: 600 150px Menlo, monospace; letter-spacing: -4px; }
+</style>
+</head>
+<body>
+<div class="layer" id="ground"></div>
+<div id="frame"><img id="fimg"></div>
+<div id="band"><img id="bimg"></div>
+<div id="brackets"></div>
+<div id="timer"><div class="label" id="tlabel"></div><div class="clock" id="tclock"></div></div>
+<div id="slam"></div>
+<div id="stamp"></div>
+<div id="cap"></div>
+<script>
+  // ───────── CONFIG (per reel) ─────────
+  // look: framed | letterbox | slam | timer.  ground: paper | night | black.
+  // stamps: [{text, w}] — w = word index inside the beat the stamp lands on.
+  const BEATS = {
+    b1: { look: 'framed', ground: 'paper', keys: ['b1', 'b1b'], stamps: [{ text: 'NEW IDEA.', w: 1 }, { text: 'NEW THING.', w: 6 }] },
+    b2: { look: 'letterbox', ground: 'black', keys: ['b2'] },
+    b3: { look: 'slam', ground: 'black', lines: [{ text: 'ONE THING.', w: 0 }, { text: '48 HOURS.', w: 3, yellow: true }] },
+    b4: { look: 'framed', ground: 'night', keys: ['b4', 'b4b'] },
+    b5: { look: 'timer', ground: 'paper', label: '48 HOURS — #01', from: 48 * 3600, rate: 2200 },
+    b6: { look: 'framed', ground: 'paper', keys: ['b6'], stamps: [{ text: 'DAY ONE.', w: 2 }] },
+  };
+  const EMPHASIS = ['nobody', 'laptop', 'simple', 'purpose'];
+  R.music('deep_minimal', { gain: 0.18 });
+
+  // ───────── craft ─────────
+  const wordT = (b, w) => R.words[Math.min(b.w0 + w, R.words.length - 1)].start - 0.05;
+  // Sound: a hit on every stamp/slam word, a soft whoosh into every beat, ticks under the timer.
+  for (const b of R.beats) {
+    const c = BEATS[b.id] || {};
+    if (b.t0 > 0) R.sfx('whoosh_fast', b.t0 - 0.1, 0.3);
+    (c.stamps || c.lines || []).forEach(s => R.sfx(c.look === 'slam' ? 'hit' : 'pop', wordT(b, s.w), 0.55));
+    if (c.look === 'timer') R.sfx('counter', b.t0 + 0.6, 0.35);
+  }
+  const brackets = R.$('brackets');
+  function placeBrackets(box, pad = 26, ln = 54, col = '#111', s = 1) {
+    const [x0, y0, x1, y1] = box, o = pad * s;
+    const corners = [[x0 - o, y0 - o, 't l'], [x1 + o - ln, y0 - o, 't r'], [x0 - o, y1 + o - ln, 'b l'], [x1 + o - ln, y1 + o - ln, 'b r']];
+    brackets.innerHTML = corners.map(([x, y, c]) => {
+      const bw = `${c.includes('t') ? 6 : 0}px ${c.includes('r') ? 6 : 0}px ${c.includes('b') ? 6 : 0}px ${c.includes('l') ? 6 : 0}px`;
+      return `<div class="br" style="left:${x}px;top:${y}px;border-width:${bw};border-color:${col}"></div>`;
+    }).join('');
+  }
+  const CAPS = R.chunks({ maxWords: 3, maxChars: 18 });
+  const hh = s => [Math.floor(s / 3600), Math.floor(s / 60) % 60, Math.floor(s) % 60].map(n => String(n).padStart(2, '0')).join(':');
+
+  R.scene(t => {
+    const b = R.beatAt(t), c = BEATS[b.id] || {}, local = t - b.t0;
+    R.$('ground').className = 'layer ' + (c.ground || 'paper');
+    const dark = c.ground !== 'paper';
+    ['frame', 'band', 'timer', 'slam', 'stamp'].forEach(id => R.vis(id, false));
+    brackets.innerHTML = '';
+
+    // footage: framed or letterboxed; sub-cut halfway through beats with two keys
+    if (c.look === 'framed' || c.look === 'letterbox') {
+      const keys = c.keys, half = (b.t1 - b.t0) / 2;
+      const k = keys.length > 1 && local > half ? 1 : 0, sub = k ? local - half : local;
+      const id = c.look === 'framed' ? 'frame' : 'band';
+      R.vis(id, true);
+      R.show(c.look === 'framed' ? 'fimg' : 'bimg', keys[k], sub + 0.3, { mode: 'loop' });
+      const pop = 1 + 0.05 * Math.exp(-sub / 0.08);                       // punch on each cut
+      R.css(id, { transform: `scale(${pop * R.lerp(1, 1.03, R.clamp(sub / half))})` });
+      if (c.look === 'framed') placeBrackets([90, 330, 990, 1590], 26, 54, dark ? '#f2f2f2' : '#111', pop);
+    }
+    // stamps: latest one whose word has been spoken, slammed in with overshoot
+    const live = (c.stamps || []).filter(s => t >= wordT(b, s.w)).pop();
+    if (live) {
+      const s = R.S(t, wordT(b, live.w), 22, 0.45);
+      R.vis('stamp', true);
+      R.$('stamp').textContent = live.text;
+      R.css('stamp', { transform: `translateX(-50%) scale(${0.6 + 0.4 * s}) rotate(${(1 - s) * -4}deg)` });
+    }
+    // type slam: one huge line at a time on its word
+    if (c.look === 'slam') {
+      const line = c.lines.filter(l => t >= wordT(b, l.w)).pop() || c.lines[0];
+      const s = R.S(t, wordT(b, line.w), 24, 0.5);
+      R.vis('slam', t >= wordT(b, c.lines[0].w));
+      R.$('slam').textContent = line.text;
+      const [sx, sy] = R.shake(t, wordT(b, line.w), 10, 0.1);
+      R.css('slam', { color: line.yellow ? '#ffd60a' : '#fff', transform: `translate(${sx}px, calc(-50% + ${sy}px)) scale(${1.25 - 0.25 * s})` });
+    }
+    // graphic: dark card rises, clock holds then runs down fast
+    if (c.look === 'timer') {
+      R.vis('timer', true);
+      const rise = R.P(local, 0, 0.45, R.E.outBack);
+      R.css('timer', { transform: `translateY(${(1 - rise) * 260}px)`, opacity: R.P(local, 0, 0.2) });
+      R.$('tlabel').textContent = c.label;
+      R.$('tclock').textContent = hh(c.from - Math.max(0, local - 0.7) * c.rate);
+      placeBrackets([140, 640, 940, 1160], 28, 54, '#111');
+    }
+
+    // captions: 2-3 words, uppercase; emphasis = yellow text on dark, yellow marker on paper
+    const showCap = c.look !== 'slam';
+    const ch = showCap ? R.chunkAt(CAPS, t) : null;
+    R.vis('cap', !!ch);
+    if (ch) {
+      R.css('cap', { color: dark ? '#fff' : '#111', top: c.look === 'letterbox' ? '1380px' : '1720px' });
+      R.$('cap').innerHTML = ch.words.map(w => {
+        const word = R.clean(w.w), em = EMPHASIS.includes(word.toLowerCase());
+        const st = em ? (dark ? 'color:#ffd60a' : 'background:#ffd60a') : '';
+        return `<span class="${em ? 'em' : ''}" style="${st}">${R.esc(word)}</span>`;
+      }).join(' ');
+      R.css('cap', { transform: `scale(${0.86 + 0.14 * R.S(t, ch.start, 26, 0.55)})` });
+    }
+  });
+</script>
+</body>
+</html>

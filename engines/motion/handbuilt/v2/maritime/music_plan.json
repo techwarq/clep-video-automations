@@ -1,0 +1,99 @@
+{
+ "mode": "composition_plan",
+ "plan": {
+  "positive_global_styles": [
+   "dark minimal techno",
+   "120 BPM",
+   "4/4",
+   "deep sub bass",
+   "cold metallic percussion",
+   "precise, mechanical, cinematic",
+   "instrumental"
+  ],
+  "negative_global_styles": [
+   "vocals",
+   "happy",
+   "piano ballad",
+   "orchestral",
+   "guitar"
+  ],
+  "sections": [
+   {
+    "section_name": "Cold open",
+    "positive_local_styles": [
+     "dark drone",
+     "sub rumble",
+     "sparse metallic clicks",
+     "ominous",
+     "very sparse"
+    ],
+    "negative_local_styles": [
+     "kick drum",
+     "melody"
+    ],
+    "duration_ms": 4000,
+    "lines": []
+   },
+   {
+    "section_name": "Build",
+    "positive_local_styles": [
+     "filtered pulsing synth",
+     "rising tension",
+     "snare roll accelerating into the drop"
+    ],
+    "negative_local_styles": [],
+    "duration_ms": 4000,
+    "lines": []
+   },
+   {
+    "section_name": "Drop",
+    "positive_local_styles": [
+     "heavy four on the floor kick",
+     "rolling sub bass",
+     "metallic hats",
+     "relentless"
+    ],
+    "negative_local_styles": [],
+    "duration_ms": 8000,
+    "lines": []
+   },
+   {
+    "section_name": "Breakdown",
+    "positive_local_styles": [
+     "no kick",
+     "underwater muffled pads",
+     "slow rising noise riser"
+    ],
+    "negative_local_styles": [
+     "kick drum"
+    ],
+    "duration_ms": 6000,
+    "lines": []
+   },
+   {
+    "section_name": "Final drop",
+    "positive_local_styles": [
+     "heaviest section",
+     "kick and sub return hard",
+     "wide dark stabs",
+     "driving"
+    ],
+    "negative_local_styles": [],
+    "duration_ms": 8000,
+    "lines": []
+   },
+   {
+    "section_name": "Outro",
+    "positive_local_styles": [
+     "single deep impact",
+     "long dark reverb tail"
+    ],
+    "negative_local_styles": [
+     "kick drum"
+    ],
+    "duration_ms": 4000,
+    "lines": []
+   }
+  ]
+ }
+}

@@ -1,0 +1,105 @@
+<!doctype html>
+<!-- Talking head · edited. The speaker's own video is the spine (media key "face", its audio is
+     already voice.wav). The edit adds: punch-in zooms that alternate per sentence (hides jump cuts),
+     B-roll cut-ins from Pinterest (full-frame or as a floating card), big callouts that slam in on
+     the word, bold karaoke captions, a thin progress bar. CONFIG is per reel; the rest is craft. -->
+<html>
+<head>
+<meta charset="utf-8">
+<script src="data.js"></script>
+<script src="runtime.js"></script>
+<style>
+  html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+  .layer { position: absolute; inset: 0; }
+  #face, #full { width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 38%; }
+  #face { filter: contrast(1.05) saturate(1.08); }
+  #card { position: absolute; left: 110px; top: 250px; width: 860px; height: 700px; border-radius: 34px; overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,.5), 0 0 0 6px rgba(255,255,255,.9); }
+  #card img { width: 100%; height: 100%; object-fit: cover; }
+  #callout { position: absolute; left: 50%; top: 520px; padding: 10px 34px 16px; border-radius: 22px; background: #fff; color: #0b0b0b;
+    font: 800 140px/1 'Avenir Next', sans-serif; letter-spacing: -4px; white-space: nowrap; box-shadow: 0 20px 50px rgba(0,0,0,.35); }
+  #cap { position: absolute; left: 60px; right: 60px; top: 1330px; text-align: center;
+    font: 800 86px/1.05 'Avenir Next', sans-serif; text-transform: uppercase; letter-spacing: -1px; color: #fff;
+    -webkit-text-stroke: 10px #000; paint-order: stroke fill; }
+  #cap span { display: inline-block; padding: 0 10px; border-radius: 14px; }
+  #bar { position: absolute; left: 0; top: 0; height: 10px; background: #ffe14d; }
+</style>
+</head>
+<body>
+<div class="layer"><img id="face"></div>
+<div class="layer" id="fullwrap"><img id="full"></div>
+<div id="card"><img id="cimg"></div>
+<div id="callout"></div>
+<div id="cap"></div>
+<div id="bar"></div>
+<script>
+  // ───────── CONFIG (per reel) ─────────
+  // Per beat (one sentence each): zoom 1 = wide, >1 = punch in. broll: media key shown
+  // 'full' (replaces the face, voice continues) or 'card' (floats over the top half).
+  // callout: {text, w} — slams in on word index w within the beat.
+  const BEATS = {
+    b1: { zoom: 1.0 },
+    b2: { zoom: 1.18, callout: { text: "YOU DON'T.", w: 0 } },
+    b3: { zoom: 1.0, broll: 'b3', mode: 'card', callout: { text: '30 DAYS', w: 6 } },
+    b4: { zoom: 1.22 },
+    b5: { zoom: 1.08, broll: 'b5', mode: 'full' },
+  };
+  const ACCENT = '#ffe14d';
+  R.music('warm_drive', { gain: 0.12 });
+
+  // ───────── craft ─────────
+  const wordT = (b, w) => R.words[Math.min(b.w0 + w, R.words.length - 1)].start - 0.04;
+  for (const b of R.beats) {
+    const c = BEATS[b.id] || {};
+    if (c.broll) R.sfx('whoosh_soft', b.t0 - 0.1, 0.3);
+    if (c.callout) R.sfx('pop', wordT(b, c.callout.w), 0.5);
+  }
+  const CAPS = R.chunks({ maxWords: 3, maxChars: 14 });
+  const cap = R.$('cap');
+
+  R.scene(t => {
+    const b = R.beatAt(t), c = BEATS[b.id] || {}, local = t - b.t0;
+
+    // the speaker: always running in real time; zoom snaps on each new sentence, then creeps
+    R.show('face', 'face', t);
+    const z = (c.zoom || 1) * (1 + 0.025 * R.clamp(local / 4)) * (1 + 0.035 * Math.exp(-local / 0.08));
+    R.css('face', { transform: `scale(${z})` });
+
+    // b-roll
+    const full = c.broll && c.mode === 'full', card = c.broll && c.mode === 'card';
+    R.vis('fullwrap', full);
+    R.vis('card', card);
+    if (full) {
+      R.show('full', c.broll, local + 0.3, { mode: 'loop' });
+      R.css('full', { transform: `scale(${R.lerp(1.04, 1.12, R.clamp(local / (b.t1 - b.t0)))})` });
+    }
+    if (card) {
+      R.show('cimg', c.broll, local + 0.3, { mode: 'loop' });
+      const s = R.S(local, 0, 16, 0.55), out = R.P(t, b.t1 - 0.2, b.t1, R.E.inCubic);
+      R.css('card', { transform: `translateY(${(1 - s) * -120 + out * -900}px) rotate(${(1 - s) * -3}deg)`, opacity: R.clamp(s * 2) });
+    }
+
+    // callout slam
+    const co = c.callout && t >= wordT(b, c.callout.w);
+    R.vis('callout', co);
+    if (co) {
+      const s = R.S(t, wordT(b, c.callout.w), 22, 0.45);
+      R.$('callout').textContent = c.callout.text;
+      R.css('callout', { top: card ? '1000px' : '520px', transform: `translateX(-50%) scale(${0.5 + 0.5 * s}) rotate(${(1 - s) * 5 - 2}deg)` });
+    }
+
+    // captions: 3 words max, active word on an accent box
+    const ch = R.chunkAt(CAPS, t), spoken = R.wordAt(t);
+    R.vis(cap, !!ch);
+    if (ch) {
+      cap.innerHTML = ch.words.map((w, j) => {
+        const on = ch.i0 + j === spoken;
+        return `<span style="${on ? `background:${ACCENT};color:#000;-webkit-text-stroke:0` : ''}">${R.esc(R.clean(w.w))}</span>`;
+      }).join(' ');
+      R.css(cap, { transform: `scale(${0.85 + 0.15 * R.S(t, ch.start, 28, 0.55)})` });
+    }
+    R.css('bar', { width: `${(t / R.dur) * 1080}px` });
+  });
+</script>
+</body>
+</html>

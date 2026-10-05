@@ -1,0 +1,3 @@
+ADMIN_KEY=dev-admin-key
+INTERNAL_KEY=dev-vm-key
+DATABASE_URL=postgresql://…neon dev branch pooled url…

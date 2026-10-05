@@ -1,0 +1,20 @@
+**/venv
+**/__pycache__
+**/.env
+**/.cache
+**/node_modules
+engines/*/output
+engines/*/projects
+api
+.github
+.git
+**/.env.local
+.neon
+
+# gcloud-only
+.gcloudignore
+api/
+neon.ts
+package*.json
+node_modules/
+.env.local

@@ -1,0 +1,482 @@
+{
+ "sfx": [
+  {
+   "id": "warm_amb_road",
+   "desc": "distant highway traffic ambience at dawn, light wind, trucks passing far away, subtle, steady, no music",
+   "seconds": 12.0
+  },
+  {
+   "id": "warm_brake",
+   "desc": "semi truck air brakes releasing a sharp hiss, short, close",
+   "seconds": 1.48
+  },
+  {
+   "id": "warm_hazard",
+   "desc": "truck hazard light relay clicking, steady tick tock rhythm, close inside cab",
+   "seconds": 6.0
+  },
+  {
+   "id": "warm_stretch",
+   "desc": "soft airy whoosh rising in pitch, clean UI element stretching open",
+   "seconds": 0.8
+  },
+  {
+   "id": "warm_alert",
+   "desc": "gentle modern phone notification chime, two soft warm notes",
+   "seconds": 1.2
+  },
+  {
+   "id": "warm_click",
+   "desc": "crisp soft computer mouse click, dry, close mic",
+   "seconds": 0.48
+  },
+  {
+   "id": "warm_open",
+   "desc": "deep soft cinematic whoosh ending in a low warm thump, reveal",
+   "seconds": 1.36
+  },
+  {
+   "id": "warm_pop_whatsapp",
+   "desc": "short bubbly chat message pop, friendly",
+   "seconds": 0.48
+  },
+  {
+   "id": "warm_mail",
+   "desc": "short email arrival swish, soft paper whoosh",
+   "seconds": 0.68
+  },
+  {
+   "id": "warm_knock",
+   "desc": "soft digital double knock notification, wooden, subtle",
+   "seconds": 0.6
+  },
+  {
+   "id": "warm_panel",
+   "desc": "frosted glass panel sliding up smoothly, airy swoosh with a soft glassy shimmer",
+   "seconds": 1.36
+  },
+  {
+   "id": "warm_absorb",
+   "desc": "tiny soft suction pop, bubble being absorbed",
+   "seconds": 0.48
+  },
+  {
+   "id": "warm_tick",
+   "desc": "tiny clean UI tick, crisp, minimal",
+   "seconds": 0.48
+  },
+  {
+   "id": "warm_row",
+   "desc": "soft card sliding onto a table, short paper swish",
+   "seconds": 0.48
+  },
+  {
+   "id": "warm_lens",
+   "desc": "glass lens opening, airy rising shimmer whoosh, magical but subtle",
+   "seconds": 1.6
+  },
+  {
+   "id": "warm_portal",
+   "desc": "big smooth whoosh flying through into a new space, deep air rush",
+   "seconds": 1.36
+  },
+  {
+   "id": "warm_route",
+   "desc": "subtle rising electronic tone drawing a line, clean",
+   "seconds": 1.2
+  },
+  {
+   "id": "warm_pullback",
+   "desc": "reverse whoosh pulling away into distance",
+   "seconds": 1.2
+  },
+  {
+   "id": "warm_grab",
+   "desc": "soft plastic pick up click, light",
+   "seconds": 0.48
+  },
+  {
+   "id": "warm_drag",
+   "desc": "smooth card sliding across a felt table, soft swoosh",
+   "seconds": 1.0
+  },
+  {
+   "id": "warm_drop",
+   "desc": "soft satisfying thud of a card placed on a felt table",
+   "seconds": 0.6
+  },
+  {
+   "id": "warm_glide",
+   "desc": "quick soft digital glide, automatic, smooth",
+   "seconds": 0.6
+  },
+  {
+   "id": "warm_phone_in",
+   "desc": "smartphone sliding into place, smooth whoosh with a soft landing",
+   "seconds": 1.2
+  },
+  {
+   "id": "warm_typing",
+   "desc": "fast soft smartphone keyboard typing taps, close",
+   "seconds": 1.6
+  },
+  {
+   "id": "warm_sending",
+   "desc": "airy filtered rising riser building tension, whoosh, ends abruptly",
+   "seconds": 1.88
+  },
+  {
+   "id": "warm_sent",
+   "desc": "satisfying bright confirmation chime with a soft whoosh, success",
+   "seconds": 1.36
+  },
+  {
+   "id": "warm_reply",
+   "desc": "incoming chat message pop, friendly, short",
+   "seconds": 0.6
+  },
+  {
+   "id": "warm_iris",
+   "desc": "huge cinematic whoosh with a deep sub boom impact, powerful reveal",
+   "seconds": 2.2
+  },
+  {
+   "id": "warm_truck_pass",
+   "desc": "semi truck driving past on the highway, diesel engine roar with doppler, wind",
+   "seconds": 4.48
+  },
+  {
+   "id": "warm_word",
+   "desc": "soft deep warm cinematic hit, short, subtle",
+   "seconds": 1.0
+  },
+  {
+   "id": "warm_handled",
+   "desc": "big warm cinematic impact boom with a long reverb tail, emotional",
+   "seconds": 2.76
+  },
+  {
+   "id": "warm_collapse",
+   "desc": "whoosh shrinking inward, reverse suction, smooth",
+   "seconds": 1.08
+  },
+  {
+   "id": "warm_logo",
+   "desc": "clean elegant logo sting, soft shimmer chime, premium",
+   "seconds": 2.2
+  },
+  {
+   "id": "cold_blink",
+   "desc": "very faint digital tick, tiny, dry",
+   "seconds": 0.48
+  },
+  {
+   "id": "cold_keys",
+   "desc": "fast mechanical keyboard typing, crisp clicky switches, close mic, continuous",
+   "seconds": 2.2
+  },
+  {
+   "id": "cold_enter",
+   "desc": "mechanical keyboard return key press, heavy clack",
+   "seconds": 0.6
+  },
+  {
+   "id": "cold_error",
+   "desc": "harsh short digital error buzz, glitchy, computer failure",
+   "seconds": 0.68
+  },
+  {
+   "id": "cold_hit",
+   "desc": "deep cinematic boom hit, very short, heavy sub bass, dark",
+   "seconds": 1.28
+  },
+  {
+   "id": "cold_stretch",
+   "desc": "electronic zap stretching, sci-fi energy beam extending",
+   "seconds": 0.88
+  },
+  {
+   "id": "cold_enter_big",
+   "desc": "keyboard return key slam followed by a deep bass impact",
+   "seconds": 1.2
+  },
+  {
+   "id": "cold_burst",
+   "desc": "digital whoosh burst, window exploding open, glitchy, fast",
+   "seconds": 1.08
+  },
+  {
+   "id": "cold_blip",
+   "desc": "short computer terminal data blip, subtle beep",
+   "seconds": 0.48
+  },
+  {
+   "id": "cold_counter",
+   "desc": "fast digital counter ticking, rolling numbers, electronic",
+   "seconds": 1.6
+  },
+  {
+   "id": "cold_fans",
+   "desc": "server fans spinning up, datacenter hum, steady",
+   "seconds": 5.0
+  },
+  {
+   "id": "cold_chatter",
+   "desc": "soft digital processing chatter, computer data sounds, subtle",
+   "seconds": 4.0
+  },
+  {
+   "id": "cold_file",
+   "desc": "tiny soft digital pop",
+   "seconds": 0.48
+  },
+  {
+   "id": "cold_sleep",
+   "desc": "computer powering down, descending electric whir, fading",
+   "seconds": 1.6
+  },
+  {
+   "id": "cold_shrink",
+   "desc": "whoosh flying away into the distance, reverse",
+   "seconds": 1.28
+  },
+  {
+   "id": "cold_swarm",
+   "desc": "swarm of tiny digital blips spreading outward, many small beeps",
+   "seconds": 2.2
+  },
+  {
+   "id": "cold_tick",
+   "desc": "short sharp clock tick, dry",
+   "seconds": 0.48
+  },
+  {
+   "id": "cold_underwater",
+   "desc": "deep underwater ambience, muffled ocean pressure, slow bubbles",
+   "seconds": 7.0
+  },
+  {
+   "id": "cold_day",
+   "desc": "soft clock tick with a tiny airy whoosh",
+   "seconds": 0.68
+  },
+  {
+   "id": "cold_notify",
+   "desc": "incoming message notification, clean bright digital ping",
+   "seconds": 0.88
+  },
+  {
+   "id": "cold_wake",
+   "desc": "massive cinematic impact with an electric power-on surge, huge",
+   "seconds": 2.2
+  },
+  {
+   "id": "cold_restore",
+   "desc": "fast digital glitch whoosh, window restoring, snappy",
+   "seconds": 0.88
+  },
+  {
+   "id": "cold_collapse",
+   "desc": "suction whoosh collapsing into a single point",
+   "seconds": 1.08
+  },
+  {
+   "id": "cold_zip",
+   "desc": "fast whip zip swoosh passing left to right",
+   "seconds": 0.68
+  },
+  {
+   "id": "cold_wave",
+   "desc": "huge ocean wave crashing against a ship bow, spray, powerful",
+   "seconds": 3.2
+  },
+  {
+   "id": "cold_scatter",
+   "desc": "particles scattering, glittering digital dust, airy",
+   "seconds": 1.28
+  },
+  {
+   "id": "cold_converge",
+   "desc": "particles swirling inward into one point, rising whoosh",
+   "seconds": 1.28
+  },
+  {
+   "id": "cold_logo",
+   "desc": "deep dark cinematic logo impact with a clean high metallic ping, long tail",
+   "seconds": 2.56
+  },
+  {
+   "id": "dark_click",
+   "desc": "Soft, precise trackpad click, dry and close, slightly muted, premium hardware feel",
+   "seconds": 0.48
+  },
+  {
+   "id": "dark_keys",
+   "desc": "Rapid low-profile mechanical keyboard typing, tactile, soft thock, close mic, quiet room, no reverb",
+   "seconds": 2.48
+  },
+  {
+   "id": "dark_tick",
+   "desc": "Tiny clean digital tick, high and crisp, like a status light turning on, very short",
+   "seconds": 0.48
+  },
+  {
+   "id": "dark_drag",
+   "desc": "Smooth soft glide of a matte object sliding across glass, subtle friction, short",
+   "seconds": 0.8
+  },
+  {
+   "id": "dark_absorb",
+   "desc": "A small glowing object dropping into a slot and being absorbed: soft airy suck with a gentle low thump at the end",
+   "seconds": 0.8
+  },
+  {
+   "id": "dark_room_dawn",
+   "desc": "Quiet apartment at dawn: faint fridge hum, distant birds outside a closed window, a cooling kettle ticking, very soft",
+   "seconds": 7.0
+  },
+  {
+   "id": "dark_ticket_pop",
+   "desc": "Soft glassy pop of a translucent card arriving, muted, understated, short",
+   "seconds": 0.48
+  },
+  {
+   "id": "dark_spam_thunk",
+   "desc": "Dull muffled wooden thunk, like a drawer closing in another room, slightly disappointing",
+   "seconds": 0.6
+  },
+  {
+   "id": "dark_sub_word",
+   "desc": "Deep short sub-bass hit with a soft transient, cinematic, clean, no distortion",
+   "seconds": 1.2
+  },
+  {
+   "id": "dark_enter_key",
+   "desc": "Single deep decisive enter key press on a premium mechanical keyboard, close, with a tiny low-end bloom",
+   "seconds": 0.6
+  },
+  {
+   "id": "dark_code_to_email",
+   "desc": "Soft paper-and-glass whoosh as characters dissolve and reassemble, airy, delicate shimmer, short",
+   "seconds": 1.2
+  },
+  {
+   "id": "dark_cube_snap",
+   "desc": "Weighty, precise mechanical snap of a matte plastic puzzle cube face rotating into alignment, satisfying, close, dry",
+   "seconds": 0.48
+  },
+  {
+   "id": "dark_verified_chime",
+   "desc": "Very subtle high glassy chime, single note, clean and quiet, confirming",
+   "seconds": 0.6
+  },
+  {
+   "id": "dark_arc_whoosh",
+   "desc": "Long smooth airy whoosh of light travelling across a wide space, left to right, soft doppler, no harshness",
+   "seconds": 2.0
+  },
+  {
+   "id": "dark_city_air",
+   "desc": "Distant waking city at dawn from high above: faint traffic hush, wind, very soft birds",
+   "seconds": 4.0
+  },
+  {
+   "id": "dark_chip_flip",
+   "desc": "Tiny relay-like mechanical flip, crisp and clean, like a split-flap letter settling",
+   "seconds": 0.48
+  },
+  {
+   "id": "dark_json_ticks",
+   "desc": "Sequence of delicate soft data ticks, evenly spaced like eighth notes, quiet and precise",
+   "seconds": 2.0
+  },
+  {
+   "id": "dark_riser",
+   "desc": "Smooth filtered noise riser with rising tone, building tension over two seconds, clean electronic, ends abruptly",
+   "seconds": 2.0
+  },
+  {
+   "id": "dark_drop_impact",
+   "desc": "Big deep round cinematic impact with long warm sub tail and soft cymbal bloom, powerful but refined",
+   "seconds": 3.0
+  },
+  {
+   "id": "dark_phone_buzz",
+   "desc": "Single short phone vibration buzz on a wooden kitchen table, close and natural",
+   "seconds": 0.8
+  },
+  {
+   "id": "dark_logo_sting",
+   "desc": "Low glassy logo sting: soft resonant tone with warm sub and gentle shimmer, calm, long elegant tail",
+   "seconds": 4.0
+  }
+ ],
+ "music": [
+  {
+   "id": "warm_indie_100",
+   "desc": "warm confident indie-electronic: sparse felt piano build, full band drop, optimistic, grounded",
+   "bpm": 100.0,
+   "duration": 33.62,
+   "first_downbeat": 0.016,
+   "drop_t": 19.216,
+   "drop_bar": 9,
+   "outro_bar": 13,
+   "shape": "0.0 0.1 0.2 0.2 0.3 0.4 0.4 0.6 0.8 0.7 0.9 0.7 0.2 0.0"
+  },
+  {
+   "id": "dark_techno_120",
+   "desc": "dark minimal techno: cold drone open, hats drop early, underwater breakdown with riser, final drop, deep impact outro",
+   "bpm": 120.0,
+   "duration": 33.985,
+   "first_downbeat": 0.06,
+   "drop_t": 6.06,
+   "drop_bar": 4,
+   "outro_bar": 16,
+   "shape": "0.3 0.7 0.7 0.8 0.9 0.7 1.0 0.9 1.0 1.0 0.9 0.9 0.9 0.7 0.8 0.3"
+  },
+  {
+   "id": "dark_techno_long_120",
+   "desc": "dark minimal techno, longer arrangement (52 s), relentless",
+   "bpm": 120.0,
+   "duration": 52.01,
+   "first_downbeat": 0.012,
+   "drop_t": 8.012,
+   "drop_bar": 5,
+   "outro_bar": 25,
+   "shape": "0.7 0.4 0.0 0.1 0.2 0.1 0.1 0.3 1.0 1.0 1.0 0.9 0.9 1.0 1.0 0.9 1.0 1.0 0.9 0.9 0.9 0.9 0.9 0.9 0.2"
+  },
+  {
+   "id": "deep_minimal_120",
+   "desc": "minimal deep electronic: precise clean percussion, warm analog sub, ambient pads, understated tech-house pulse",
+   "bpm": 120.0,
+   "duration": 32.0,
+   "first_downbeat": 0.52,
+   "drop_t": 18.52,
+   "drop_bar": 10,
+   "outro_bar": null,
+   "shape": "0.8 0.9 0.9 0.9 0.9 0.9 0.9 0.9 0.9 0.9 0.9 1.0 0.9 1.0 0.7"
+  },
+  {
+   "id": "dark_pulse_alt",
+   "desc": "dark minimal techno, pulsing sub bass, metallic arps, tense",
+   "bpm": 118.77,
+   "duration": 34.0,
+   "first_downbeat": 1.6675,
+   "drop_t": 25.915,
+   "drop_bar": 13,
+   "outro_bar": null,
+   "shape": "0.6 0.4 0.2 0.2 0.1 0.1 0.2 0.1 0.1 0.1 0.0 0.0 0.6 0.6 0.8 0.4"
+  },
+  {
+   "id": "warm_drive_alt",
+   "desc": "warm mid-tempo indie-electronic, steady live-feel drums, analog pads, electric piano",
+   "bpm": 95.99,
+   "duration": 34.0,
+   "first_downbeat": 0.16,
+   "drop_t": 17.662,
+   "drop_bar": 8,
+   "outro_bar": 2,
+   "shape": "0.8 0.3 0.1 0.1 0.1 0.1 0.1 0.3 0.1 0.1 0.1 0.1 0.1"
+  }
+ ]
+}

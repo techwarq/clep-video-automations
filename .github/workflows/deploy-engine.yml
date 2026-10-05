@@ -1,0 +1,25 @@
+name: deploy engine (image for the render VM)
+
+# The VM pulls :latest each time it boots (deploy/startup.sh), so a deploy is just a new image.
+# A VM that is running right now keeps the old image until it next powers off and on.
+on:
+  push:
+    branches: [main]
+    paths: ["engines/**", "vm/**", "Dockerfile", ".github/workflows/deploy-engine.yml"]
+  workflow_dispatch:
+
+env:
+  IMAGE: us-east4-docker.pkg.dev/${{ vars.GCP_PROJECT }}/video-automation/engine
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - run: gcloud auth configure-docker us-east4-docker.pkg.dev --quiet
+      - run: docker build -t $IMAGE:${{ github.sha }} -t $IMAGE:latest .
+      - run: docker push --all-tags $IMAGE

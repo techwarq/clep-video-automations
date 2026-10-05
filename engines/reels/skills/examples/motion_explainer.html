@@ -1,0 +1,144 @@
+<!doctype html>
+<!-- Motion explainer · one take. A single carrier object (here a sound wave) morphs through
+     every beat: hook word → wave → mic listens → wave flips → waves cancel → flat line → dot → word.
+     Full-bleed colour fields swap on beats, huge kinetic type, karaoke captions, SFX on every action.
+     Plan: narrated beats b1..b5, no footage. Replace the carrier + states for your topic. -->
+<html>
+<head>
+<meta charset="utf-8">
+<script src="data.js"></script>
+<script src="runtime.js"></script>
+<style>
+  html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #0f0f10; }
+  .layer { position: absolute; inset: 0; }
+  #field { background: #0f0f10; }
+  #grid { opacity: .5;
+    background-image: linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+    background-size: 90px 90px; }
+  #kicker { position: absolute; left: 80px; top: 230px; font: 700 34px Menlo, monospace; letter-spacing: 6px; color: rgba(255,255,255,.6); }
+  #head { position: absolute; left: 80px; right: 80px; top: 300px; font: 800 132px/0.98 'Avenir Next', sans-serif;
+    letter-spacing: -4px; color: #fff; }
+  #head span { display: inline-block; }
+  svg { position: absolute; left: 0; top: 0; }
+  #mic { position: absolute; width: 120px; height: 120px; border-radius: 50%; background: #fff; }
+  #mic::after { content: ''; position: absolute; inset: 34px; border-radius: 50%; background: #0f0f10; }
+  #chip { position: absolute; left: 390px; top: 1210px; width: 300px; height: 150px; border-radius: 28px;
+    background: #fff; color: #111; font: 800 52px 'Avenir Next', sans-serif; display: flex; align-items: center; justify-content: center; }
+  #label { position: absolute; font: 700 36px Menlo, monospace; letter-spacing: 4px; color: #fff; }
+  #cap { position: absolute; left: 70px; right: 70px; top: 1600px; text-align: center; color: #fff;
+    font: 800 64px 'Avenir Next', sans-serif; text-transform: uppercase; letter-spacing: -.5px; }
+</style>
+</head>
+<body>
+<div class="layer" id="field"></div>
+<div class="layer" id="grid"></div>
+<div id="kicker"></div>
+<div id="head"></div>
+<svg width="1080" height="1920"><path id="wa" fill="none" stroke-linecap="round"/><path id="wb" fill="none" stroke-linecap="round"/><circle id="dot" r="0"/></svg>
+<div id="mic"></div>
+<div id="chip">INVERT</div>
+<div id="label"></div>
+<div id="cap"></div>
+<script>
+  // ───────── CONFIG (per reel) ─────────
+  // One state per beat: field colour, kicker, headline (words slam in on the spoken words).
+  const STATES = {
+    b1: { field: '#0f0f10', kicker: 'HOW IT WORKS', head: 'Noise that makes silence.' },
+    b2: { field: '#1d4ed8', kicker: '01 — LISTEN', head: 'A mic hears the world.' },
+    b3: { field: '#f97316', kicker: '02 — FLIP', head: 'A chip flips the wave.', accent: '#111' },
+    b4: { field: '#111827', kicker: '03 — CANCEL', head: 'Peaks meet valleys.' },
+    b5: { field: '#f5f1e8', kicker: 'RESULT', head: 'Silence.', ink: '#111', accent: '#1d4ed8' },
+  };
+  const ACCENT = '#facc15';
+  R.music('deep_minimal', { gain: 0.16 });
+
+  // ───────── craft ─────────
+  const B = id => R.beat(id);
+  // sound: whoosh into each state, tick per headline word, a big hit when the waves cancel
+  R.beats.slice(1).forEach(b => R.sfx('whoosh_soft', b.t0 - 0.15, 0.35));
+  R.beats.forEach(b => (STATES[b.id].head.split(' ')).forEach((_, i) => R.sfx('tick', b.t0 + 0.12 + i * 0.09, 0.25)));
+  R.sfx('hit', B('b4').t0 + 1.0, 0.7);
+  R.sfx('pop_glass', B('b5').t0 + 0.2, 0.5);
+
+  const hexToRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const mix = (a, b, p) => { const A = hexToRgb(a), Bc = hexToRgb(b); return `rgb(${A.map((v, i) => Math.round(R.lerp(v, Bc[i], p))).join(',')})`; };
+  // Field colour wipes up from the bottom over 0.35 s at each beat start (no hard cut).
+  function field(t) {
+    const b = R.beatAt(t), i = R.beats.indexOf(b), prev = R.beats[i - 1];
+    const p = R.P(t, b.t0, b.t0 + 0.35, R.E.inOutCubic);
+    const from = prev ? STATES[prev.id].field : STATES[b.id].field;
+    return mix(from, STATES[b.id].field, p);
+  }
+  // wave path across the frame: amp, frequency, phase, vertical centre, horizontal extent
+  function wave(amp, freq, phase, cy, x0 = 60, x1 = 1020, n = 140) {
+    let d = '';
+    for (let i = 0; i <= n; i++) {
+      const x = R.lerp(x0, x1, i / n);
+      const env = Math.sin(Math.PI * i / n);                       // taper the ends
+      const y = cy + amp * env * Math.sin(freq * (x / 1080) * Math.PI * 2 + phase);
+      d += (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+    }
+    return d;
+  }
+  const head = R.$('head'), cap = R.$('cap');
+  const CAPS = R.chunks({ maxWords: 3, maxChars: 16 });
+
+  R.scene(t => {
+    const b = R.beatAt(t), st = STATES[b.id], local = t - b.t0, ink = st.ink || '#fff';
+    R.css('field', { background: field(t) });
+    R.css('grid', { opacity: st.ink ? 0.15 : 0.5 });
+
+    // kicker + headline: words rise in one after another, then the whole line drifts up slowly
+    R.$('kicker').textContent = st.kicker;
+    R.css('kicker', { color: st.ink ? 'rgba(17,17,17,.55)' : 'rgba(255,255,255,.6)', opacity: R.P(local, 0, 0.2) });
+    const words = st.head.split(' ');
+    head.innerHTML = words.map((w, i) => {
+      const s = R.S(local, 0.12 + i * 0.09, 18, 0.6);
+      return `<span style="opacity:${R.clamp(s * 1.4)};transform:translateY(${(1 - s) * 80}px)">${R.esc(w)}</span>`;
+    }).join(' ');
+    R.css(head, { color: ink, transform: `translateY(${-local * 6}px)` });
+
+    // the carrier: one wave that becomes two, cancels to a line, collapses to a dot
+    const wa = R.$('wa'), wb = R.$('wb'), dot = R.$('dot');
+    const cy = 1000, phase = t * 7;
+    let ampA = 0, ampB = 0, offB = 0, width = 14, x0 = 60, x1 = 1020, dotR = 0;
+    if (b.id === 'b1') ampA = 170 * R.P(local, 0.3, 1.0, R.E.outBack);
+    if (b.id === 'b2') { ampA = 170 + 30 * Math.sin(t * 3); }
+    if (b.id === 'b3') { ampA = 170; ampB = 170 * R.P(local, 0.4, 1.2, R.E.outCubic); offB = 260 * (1 - R.P(local, 1.4, 2.4, R.E.inOutCubic)); }
+    if (b.id === 'b4') { const k = 1 - R.P(local, 0.2, 1.0, R.E.inOutCubic); ampA = 170 * k; ampB = 170 * k; }
+    if (b.id === 'b5') { const k = R.P(local, 0.0, 0.5, R.E.inOutCubic); x0 = R.lerp(60, 540, k); x1 = R.lerp(1020, 540, k); dotR = 26 * R.S(local, 0.45, 16, 0.5); width = 14 * (1 - k); }
+    const wcol = st.ink ? '#111' : '#fff';
+    wa.setAttribute('d', wave(ampA, 2.2, phase, cy, x0, x1));
+    wb.setAttribute('d', wave(ampB, 2.2, phase + Math.PI, cy + offB, x0, x1));
+    wa.setAttribute('stroke', wcol); wa.setAttribute('stroke-width', width.toFixed(2));
+    wb.setAttribute('stroke', ACCENT); wb.setAttribute('stroke-width', (ampB > 1 ? width : 0).toFixed(2));
+    dot.setAttribute('cx', 540); dot.setAttribute('cy', cy); dot.setAttribute('r', dotR.toFixed(2)); dot.setAttribute('fill', '#111');
+
+    // supporting actors: mic pulses while listening, chip slams in to flip the wave
+    const micOn = b.id === 'b2';
+    R.vis('mic', micOn);
+    if (micOn) {
+      const s = R.S(local, 0.1, 16, 0.5), pulse = 1 + 0.06 * Math.sin(t * 12);
+      R.css('mic', { left: '80px', top: `${cy - 60}px`, transform: `scale(${s * pulse})` });
+    }
+    const chipOn = b.id === 'b3';
+    R.vis('chip', chipOn);
+    if (chipOn) R.css('chip', { transform: `scale(${R.S(local, 0.2, 18, 0.45)}) rotate(${(1 - R.P(local, 0.2, 0.7)) * -8}deg)` });
+    const lab = { b2: 'OUTSIDE NOISE', b3: 'ANTI-NOISE', b4: '0 dB' }[b.id] || '';
+    R.vis('label', !!lab);
+    if (lab) {
+      R.$('label').textContent = lab;
+      R.css('label', { left: '80px', top: `${cy + 230}px`, color: b.id === 'b3' ? '#111' : '#fff', opacity: R.P(local, 0.5, 0.8) });
+    }
+
+    // karaoke captions: current chunk, spoken word in the accent
+    const ch = R.chunkAt(CAPS, t), spoken = R.wordAt(t);
+    R.vis(cap, !!ch);
+    if (ch) {
+      cap.innerHTML = ch.words.map((w, j) => `<span style="color:${ch.i0 + j === spoken ? (st.accent || ACCENT) : ink}">${R.esc(R.clean(w.w))}</span>`).join(' ');
+      R.css(cap, { transform: `scale(${0.9 + 0.1 * R.S(t, ch.start, 26, 0.6)})` });
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,636 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../truemile/assets/inter.css">
+<link rel="stylesheet" href="../../truemile/assets/instrument-serif.css">
+<style>
+:root{--cream:#f8f7f0;--ink:#252320;--or:#e8501e;--tan:#b9b0a3;--gray:#77736b;--line:#e2ddd2}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#f8f7f0;font-family:Inter,sans-serif;-webkit-font-smoothing:antialiased;color:var(--ink)}
+.layer{position:absolute;left:0;top:0;width:1920px;height:1080px}
+#bg{z-index:0}
+#ui{position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:1;perspective:2600px}
+#top{z-index:2}
+#fx{position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:3;pointer-events:none}
+#cursor{position:absolute;left:0;top:0;z-index:4;transform-origin:3px 2px}
+#grain{z-index:5;mix-blend-mode:overlay;opacity:.5}
+.abs{position:absolute}
+.serif{font-family:'Instrument Serif',Georgia,serif}
+.it{font-style:italic}
+
+/* map clock */
+#clock{right:72px;top:64px;font-size:15px;font-weight:500;letter-spacing:3px;color:var(--gray)}
+
+/* alert pill text */
+#pillText{left:0;top:0;height:68px;display:flex;align-items:center;gap:14px;padding:0 30px 0 64px;white-space:nowrap;color:#f8f7f0;font-size:21px;font-weight:500}
+#pillText .time{margin-left:18px;color:var(--tan);font-size:18px}
+
+/* toasts: dark glass over footage */
+#toasts{right:56px;top:56px;width:470px}
+.toast{position:absolute;left:0;top:0;width:470px;height:86px;border-radius:20px;padding:16px 18px;display:flex;gap:14px;align-items:center;
+  background:rgba(18,22,26,.46);backdrop-filter:blur(22px) saturate(150%);border:1px solid rgba(255,255,255,.16);color:#fff;
+  box-shadow:0 18px 40px rgba(0,0,0,.28)}
+.appi{width:44px;height:44px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;color:#fff}
+.toast .h{font-size:14px;font-weight:600;opacity:.75;display:flex;justify-content:space-between}
+.toast .b{font-size:17px;font-weight:500;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+#kin1{left:96px;top:820px;font-size:112px;color:#fff;white-space:nowrap;letter-spacing:-1px;text-shadow:0 6px 40px rgba(0,0,0,.35)}
+#kin1 span{display:inline-block;margin-right:26px}
+
+/* coverage panel: light glass */
+#panel{left:580px;top:220px;width:760px;height:452px;border-radius:30px;overflow:hidden;
+  background:rgba(250,248,242,.74);backdrop-filter:blur(34px) saturate(170%);border:1px solid rgba(255,255,255,.7);
+  box-shadow:0 40px 90px rgba(10,14,20,.38), inset 0 1px 0 rgba(255,255,255,.9)}
+#panel .hdr{position:absolute;left:32px;top:26px;right:32px;height:30px;display:flex;align-items:center;gap:10px}
+#panel .hdr .nm{font-weight:600;font-size:17px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:14px;font-size:13px;font-weight:600;white-space:nowrap}
+.chip.tan{background:#ece7dc;color:#5d584f}
+.chip.or{background:var(--or);color:#fff}
+.chip.ink{background:var(--ink);color:#fff}
+.chip.ok{background:#e3efe2;color:#2f6b3a}
+#linked{margin-left:auto}
+#stA,#stB{position:absolute;left:0;top:0;width:760px}
+#stA .ttl{position:absolute;left:32px;top:74px;font-size:46px;line-height:50px;letter-spacing:-.5px}
+.load{position:absolute;left:32px;width:696px;height:64px;border-radius:16px;background:rgba(255,255,255,.72);border:1px solid var(--line);display:flex;align-items:center;padding:0 18px 0 22px;gap:14px}
+.load .bar{width:4px;height:34px;border-radius:2px;background:var(--or)}
+.load .c{font-weight:600;font-size:17px}
+.load .r{font-size:15px;color:var(--gray)}
+.load .w{margin-left:auto;font-size:14px;font-weight:600;color:var(--or)}
+#btnFind{position:absolute;left:32px;top:360px;width:696px;height:60px;border-radius:16px;background:var(--ink);color:#fff;font-weight:600;font-size:18px;display:flex;align-items:center;justify-content:center;gap:10px}
+#stB .ttl2{position:absolute;left:32px;top:74px;font-size:22px;font-weight:600}
+.step{position:absolute;left:32px;height:30px;display:flex;align-items:center;gap:12px;font-size:16px;color:#3b3833}
+.step .ic{width:22px;height:22px;border-radius:11px;border:2px solid #cfc8bb;position:relative}
+.step .ic.done{background:var(--ink);border-color:var(--ink)}
+.step .ic.done::after{content:"";position:absolute;left:6px;top:3px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.step .v{margin-left:auto;color:var(--gray);font-size:14px}
+.cand{position:absolute;left:32px;width:696px;height:72px;border-radius:18px;background:rgba(255,255,255,.78);border:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 16px}
+.badge{width:46px;height:46px;border-radius:12px;background:var(--ink);color:#fff;font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center;flex:none}
+.cand .nm{font-weight:600;font-size:17px}
+.cand .sub{font-size:13.5px;color:var(--gray);margin-top:2px}
+.cand .chip{margin-left:auto}
+
+/* browser */
+#browser{left:0;top:0;width:1580px;height:880px;border-radius:22px;background:#fbfaf6;overflow:hidden;transform-origin:0 0;
+  box-shadow:0 60px 120px rgba(40,24,10,.28),0 0 0 1px rgba(0,0,0,.06)}
+#browser .tb{position:absolute;left:0;top:0;width:100%;height:52px;border-bottom:1px solid #ece8df;background:#f6f4ee}
+.tl{position:absolute;top:20px;width:12px;height:12px;border-radius:6px}
+#url{position:absolute;left:580px;top:12px;width:420px;height:28px;border-radius:9px;background:#ebe8e0;font-size:13px;color:#77736b;display:flex;align-items:center;justify-content:center}
+#slot{position:absolute;left:24px;top:70px;width:480px;height:270px;border-radius:14px;overflow:hidden;background:#222}
+#slot canvas{width:480px;height:270px;display:block}
+#slotChip{position:absolute;left:12px;top:12px;height:24px;padding:0 10px;border-radius:12px;background:rgba(20,20,20,.55);backdrop-filter:blur(8px);color:#fff;font-size:11px;font-weight:600;letter-spacing:1.5px;display:flex;align-items:center;gap:6px}
+#slotChip i{width:7px;height:7px;border-radius:4px;background:#ff5a36;display:block}
+.al{position:absolute;left:24px;width:480px;height:52px;display:flex;gap:12px;align-items:flex-start}
+.al .d{width:9px;height:9px;border-radius:5px;margin-top:6px;flex:none}
+.al .t{font-size:15px;font-weight:600}
+.al .s{font-size:13px;color:var(--gray);margin-top:2px}
+#alertsT{position:absolute;left:24px;top:362px;font-size:12px;font-weight:700;letter-spacing:2px;color:#9b958a}
+#board{position:absolute;left:540px;top:64px;width:1016px;height:780px}
+#board .ttl{position:absolute;left:0;top:0;font-size:42px;letter-spacing:-.5px}
+#board .chips{position:absolute;right:0;top:10px;display:flex;gap:8px}
+.dh{position:absolute;top:80px;font-size:12px;font-weight:700;letter-spacing:2px;color:#9b958a}
+.rowl{position:absolute;left:0;width:1016px;height:104px;border-top:1px solid #ece8df}
+.rowl .lab{position:absolute;left:0;top:26px;display:flex;gap:12px;align-items:center}
+.rowl .badge{width:40px;height:40px;border-radius:11px;font-size:15px}
+.rowl .nm{font-size:15px;font-weight:600}
+.rowl .st{font-size:12.5px;color:var(--gray);margin-top:2px}
+.blk{position:absolute;width:149px;height:76px;border-radius:12px;background:#fffdf8;border:1px solid #e3ded3;padding:10px 12px 0 16px;overflow:hidden}
+.blk::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc,#252320)}
+.blk .c{font-size:14px;font-weight:600;white-space:nowrap}
+.blk .r{font-size:12px;color:var(--gray);margin-top:3px;white-space:nowrap}
+.blk .ok{position:absolute;right:8px;top:8px;width:18px;height:18px;border-radius:9px;background:#2f8a4a;display:none}
+.blk .ok::after{content:"";position:absolute;left:6px;top:3px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+#hatch{position:absolute;left:190px;top:122px;width:826px;height:88px;border-radius:12px;
+  background:repeating-linear-gradient(-45deg,rgba(232,80,30,.09) 0 10px,rgba(232,80,30,.02) 10px 20px);border:1px dashed rgba(232,80,30,.45)}
+#hatch span{position:absolute;right:14px;bottom:10px;font-size:12px;font-weight:700;letter-spacing:1.5px;color:#c4471d}
+
+/* phone */
+#phone{left:1400px;top:130px;width:400px;height:820px;border-radius:64px;background:#111;padding:12px;box-shadow:0 60px 110px rgba(40,24,10,.35),inset 0 0 0 2px #2a2a2a}
+#scr{position:relative;width:376px;height:796px;border-radius:52px;overflow:hidden;background:#efe9df}
+#island{position:absolute;left:128px;top:12px;width:120px;height:34px;border-radius:17px;background:#000;z-index:3}
+#sb{position:absolute;left:34px;top:18px;font-size:15px;font-weight:600}
+#chh{position:absolute;left:0;top:54px;width:376px;height:74px;background:rgba(247,244,237,.95);border-bottom:1px solid #e3ddd1;display:flex;align-items:center;gap:12px;padding:0 18px}
+.av{width:42px;height:42px;border-radius:21px;background:#d8cfbf;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#5d584f}
+#chh .n{font-weight:600;font-size:16px}#chh .s{font-size:12.5px;color:var(--gray)}
+.bub{position:absolute;max-width:282px;padding:10px 13px 20px 13px;border-radius:16px;font-size:15.5px;line-height:21px}
+.bub .tm{position:absolute;right:10px;bottom:4px;font-size:10.5px;color:#8b867c}
+.bub.in{left:14px;background:#fff;border-top-left-radius:5px}
+.bub.out{right:14px;background:#fdebe1;border:1.5px dashed rgba(232,80,30,.55);border-top-right-radius:5px}
+.bub.out.sent{background:#dff2d3;border:1.5px solid #dff2d3}
+#dlabel{position:absolute;right:16px;font-size:11px;font-weight:700;letter-spacing:1.2px;color:#c4471d}
+#inbar{position:absolute;left:12px;bottom:26px;width:352px;height:46px;border-radius:23px;background:#fff;border:1px solid #e3ddd1}
+
+/* draft cards + approval bar */
+.dcard{position:absolute;width:372px;height:96px;border-radius:20px;padding:16px;display:flex;gap:12px;
+  background:rgba(255,253,248,.8);backdrop-filter:blur(26px) saturate(160%);border:1px solid rgba(255,255,255,.8);box-shadow:0 24px 50px rgba(40,24,10,.18)}
+.dcard .h{font-size:13px;font-weight:600;color:var(--gray);display:flex;justify-content:space-between;width:280px}
+.dcard .b{font-size:15px;font-weight:500;margin-top:4px;width:280px;line-height:20px}
+#appr{left:560px;top:930px;width:800px;height:88px;border-radius:26px;padding:0 16px 0 26px;display:flex;align-items:center;gap:14px;
+  background:rgba(255,253,248,.82);backdrop-filter:blur(30px) saturate(170%);border:1px solid rgba(255,255,255,.85);box-shadow:0 30px 70px rgba(40,24,10,.25)}
+#appr .t{font-weight:600;font-size:18px}#appr .s{font-size:13.5px;color:var(--gray);margin-top:2px}
+#btnSend{margin-left:auto;width:220px;height:56px;border-radius:16px;background:var(--ink);color:#fff;font-weight:600;font-size:17px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+#sendFill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--or)}
+#sendLbl{position:relative}
+
+/* finale */
+#words{left:110px;top:760px;white-space:nowrap;font-size:132px;color:#fff;letter-spacing:-1.5px;text-shadow:0 8px 50px rgba(0,0,0,.35)}
+#words span{display:inline-block;margin-right:34px}
+#handled{left:0;top:360px;width:1920px;text-align:center;font-size:300px;line-height:300px;color:#fff;letter-spacing:-4px;text-shadow:0 10px 60px rgba(0,0,0,.35)}
+#lock{left:0;top:0;width:1920px;height:1080px}
+#wm{position:absolute;top:396px;font-size:128px;font-weight:600;letter-spacing:-4px;line-height:150px;white-space:nowrap}
+#tag{position:absolute;left:0;width:1920px;top:600px;text-align:center;font-size:42px;color:var(--gray)}
+#site{position:absolute;left:0;width:1920px;top:668px;text-align:center;font-size:17px;font-weight:600;letter-spacing:5px;color:#9b958a}
+</style>
+</head>
+<body>
+<canvas id="bg" class="layer" width="1920" height="1080"></canvas>
+<div id="ui">
+  <div id="clock" class="abs">THU · 6:14 AM</div>
+  <div id="pillText" class="abs"><span>Truck 47 · Breakdown · I-65 near Gary, IN</span><span class="time">6:14</span></div>
+
+  <div id="toasts" class="abs">
+    <div class="toast" id="t0"><div class="appi" style="background:#1fb95a">W</div><div><div class="h"><span>WhatsApp · Ray, Truck 47</span><span>now</span></div><div class="b">Tow ETA 3 hrs. Won't make Chicago.</div></div></div>
+    <div class="toast" id="t1"><div class="appi" style="background:#0f6cbd">O</div><div><div class="h"><span>Outlook · Jensen Foods</span><span>now</span></div><div class="b">Confirming 09:30 pickup on 4128?</div></div></div>
+    <div class="toast" id="t2"><div class="appi" style="background:#5b5fc7">T</div><div><div class="h"><span>Teams · Dispatch</span><span>now</span></div><div class="b">Who's covering 47's loads?</div></div></div>
+    <div class="toast" id="t3"><div class="appi" style="background:#0f6cbd">O</div><div><div class="h"><span>Outlook · TQL broker</span><span>now</span></div><div class="b">Status on 3310 for Friday?</div></div></div>
+  </div>
+  <div id="kin1" class="abs serif it"><span>One</span><span>truck</span><span>down.</span></div>
+
+  <div id="panel" class="abs">
+    <div class="hdr"><svg width="28" height="28" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#e8501e"/><polyline points="13,46 26,32 35,39 49,21" fill="none" stroke="#fff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="50" cy="19" r="5" fill="#fff"/></svg>
+      <span class="nm">TrueMile</span><span class="chip tan">Coverage</span><span class="chip ink" id="linked">0 linked</span></div>
+    <div id="stA">
+      <div class="ttl serif">Truck 47 is out.<br><span class="it">Two loads</span> need coverage.</div>
+      <div class="load" style="top:196px"><div class="bar"></div><div><div class="c">Jensen Foods · 4128</div><div class="r">Chicago, IL → Columbus, OH</div></div><div class="w">Today 09:30</div></div>
+      <div class="load" style="top:272px"><div class="bar"></div><div><div class="c">Midwest Paper · 3310</div><div class="r">Joliet, IL → Dayton, OH</div></div><div class="w">Fri 07:00</div></div>
+      <div id="btnFind">Find coverage</div>
+    </div>
+    <div id="stB">
+      <div class="ttl2">Covering Jensen 4128 · pickup 09:30</div>
+      <div class="step" id="s0" style="top:118px"><div class="ic"></div>Scanning trucks within 150 mi<span class="v">14 found</span></div>
+      <div class="step" id="s1" style="top:152px"><div class="ic"></div>Hours of service<span class="v">9 eligible</span></div>
+      <div class="step" id="s2" style="top:186px"><div class="ic"></div>Equipment · 53′ dry van<span class="v">5 match</span></div>
+      <div class="step" id="s3" style="top:220px"><div class="ic"></div>Customer windows<span class="v">3 on time</span></div>
+      <div class="cand" id="c0" style="top:268px"><div class="badge">52</div><div><div class="nm">Marco Alvarez</div><div class="sub">38 mi away · 9h 40m left · empty in Hammond</div></div><span class="chip or">Best fit</span></div>
+      <div class="cand" id="c1" style="top:350px"><div class="badge">19</div><div><div class="nm">Jin Nguyen</div><div class="sub">64 mi away · 6h 05m left</div></div><span class="chip tan">Takes 3310 · Fri</span></div>
+      <div class="cand" id="c2" style="top:432px"><div class="badge" style="background:#9b958a">61</div><div><div class="nm">Dana Cole</div><div class="sub">112 mi away · 4h 10m left</div></div><span class="chip tan">✕ Hours short</span></div>
+    </div>
+  </div>
+
+  <div id="browser" class="abs">
+    <div class="tb"><div class="tl" style="left:20px;background:#ec6a5e"></div><div class="tl" style="left:40px;background:#f4bf4f"></div><div class="tl" style="left:60px;background:#61c554"></div><div id="url">app.truemile.ai/plan</div></div>
+    <div id="slot"><canvas id="slotc" width="1920" height="1080"></canvas><div id="slotChip"><i></i>LIVE · I-65 N</div></div>
+    <div id="alertsT">ALERTS</div>
+    <div class="al" style="top:392px"><div class="d" style="background:#e8501e"></div><div><div class="t">Truck 47 · Breakdown · 06:14</div><div class="s">I-65 near Gary, IN · tow ETA 3h</div></div></div>
+    <div class="al" style="top:452px"><div class="d" style="background:#2f8a4a"></div><div><div class="t">Coverage found · Jensen 4128</div><div class="s">Truck 52 · Marco Alvarez · ETA 08:41</div></div></div>
+    <div class="al" style="top:512px"><div class="d" style="background:#b9b0a3"></div><div><div class="t">Midwest Paper 3310 · Fri</div><div class="s">Truck 19 · Jin Nguyen</div></div></div>
+    <div id="board">
+      <div class="ttl serif">Week plan</div>
+      <div class="chips"><span class="chip ok" id="updChip" style="display:none">Plan updated · 2 changes</span><span class="chip tan"><span style="width:7px;height:7px;border-radius:4px;background:#2f8a4a;display:inline-block"></span>Synced · McLeod</span><span class="chip tan">Thu, Oct 2</span></div>
+      <div class="dh" style="left:0">TRUCK</div>
+      <div class="dh" style="left:198px;color:#c4471d">THU · TODAY</div><div class="dh" style="left:363px">FRI</div><div class="dh" style="left:528px">SAT</div><div class="dh" style="left:693px">SUN</div><div class="dh" style="left:858px">MON</div>
+      <div id="rows"></div>
+      <div id="hatch"><span>OUT OF SERVICE · BREAKDOWN</span></div>
+      <div id="blocks"></div>
+    </div>
+  </div>
+
+  <div id="d0" class="dcard abs"><div class="appi" style="background:#0f6cbd;width:40px;height:40px">O</div><div><div class="h"><span>Email · TQL broker</span><span class="chip tan" style="height:22px;font-size:11px" id="d0s">Draft</span></div><div class="b">Truck 19 covers 3310, Fri 07:00. Rate con attached.</div></div></div>
+  <div id="d1" class="dcard abs"><div class="appi" style="background:#5b5fc7;width:40px;height:40px">T</div><div><div class="h"><span>Teams · Dispatch</span><span class="chip tan" style="height:22px;font-size:11px" id="d1s">Draft</span></div><div class="b">Both of Truck 47's loads are covered.</div></div></div>
+
+  <div id="phone" class="abs"><div id="scr">
+    <div id="island"></div><div id="sb">6:21</div>
+    <div id="chh"><div class="av">MA</div><div><div class="n">Marco Alvarez</div><div class="s">Truck 52 · WhatsApp</div></div></div>
+    <div class="bub in" style="top:150px">Empty in Hammond. Ready by 7:30.<span class="tm">06:02</span></div>
+    <div id="dlabel" style="top:224px">DRAFTED BY TRUEMILE</div>
+    <div class="bub out" id="draft" style="top:244px"><span id="draftTxt"></span><span class="tm" id="draftTm">06:21</span></div>
+    <div class="bub in" id="reply" style="top:420px">On it. Rolling out 08:05.<span class="tm">06:22</span></div>
+    <div id="inbar"></div>
+  </div></div>
+
+  <div id="appr" class="abs">
+    <svg width="54" height="34" viewBox="0 0 54 34"><circle cx="17" cy="17" r="15" fill="#1fb95a" stroke="#fff" stroke-width="2.5"/><circle cx="27" cy="17" r="15" fill="#0f6cbd" stroke="#fff" stroke-width="2.5"/><circle cx="37" cy="17" r="15" fill="#5b5fc7" stroke="#fff" stroke-width="2.5"/></svg>
+    <div><div class="t" id="apprT">3 messages ready</div><div class="s">WhatsApp · Outlook · Teams · your approval</div></div>
+    <div id="btnSend"><div id="sendFill"></div><span id="sendLbl">Approve &amp; send</span></div>
+  </div>
+</div>
+<canvas id="top" class="layer" width="1920" height="1080"></canvas>
+<div id="fx">
+  <div id="words" class="abs serif it"><span>The work</span><span>behind</span><span>every mile.</span></div>
+  <div id="handled" class="abs serif it">Handled.</div>
+  <div id="lock" class="abs">
+    <div id="wm">TrueMile</div>
+    <div id="tag" class="serif it">Built for the way the day actually goes.</div>
+    <div id="site">TRUEMILE.AI</div>
+  </div>
+</div>
+<div id="cursor"></div>
+<canvas id="grain" class="layer" width="1920" height="1080"></canvas>
+
+<script src="../lib/core.js"></script>
+<script>
+const {W,H,E,clamp,lerp,P,S,kf,hash,grid,img,Seq,rr,cover,grain,$,css,show,px,CURSOR_SVG,cursorAt,placeCursor,fontsReady} = K;
+const G = grid(0.017, 0.6);
+const b = (bar, bt=1, sub=0) => G.b(bar, bt, sub, 2);       // sub = 8th notes
+const OR = '#e8501e', INK = '#252320', CREAM = '#f8f7f0';
+
+const seq = {
+  brk: new Seq('seq/tm_breakdown', 298), aer: new Seq('seq/tm_aerial', 298),
+  silk: new Seq('seq/tm_silk', 298), roll: new Seq('seq/tm_rolling', 397),
+};
+const bg = $('bg').getContext('2d'), tp = $('top').getContext('2d'), gr = $('grain').getContext('2d');
+const slotc = $('slotc').getContext('2d');
+
+// ---------------- map route (world coords) ----------------
+const ROUTE = (() => {
+  const P0=[250,372],C1=[480,380],C2=[560,470],P1=[720,470],C3=[900,470],C4=[1060,590],P2=[1240,620],C5=[1420,650],C6=[1520,760],P3=[1690,800];
+  const segs=[[P0,C1,C2,P1],[P1,C3,C4,P2],[P2,C5,C6,P3]], pts=[];
+  for (const [a,c1,c2,d] of segs) for (let i=0;i<=120;i++){ const u=i/120,v=1-u;
+    pts.push([v*v*v*a[0]+3*v*v*u*c1[0]+3*v*u*u*c2[0]+u*u*u*d[0], v*v*v*a[1]+3*v*v*u*c1[1]+3*v*u*u*c2[1]+u*u*u*d[1]]); }
+  const L=[0]; for (let i=1;i<pts.length;i++) L.push(L[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));
+  return {pts,L,total:L[L.length-1],gary:L[121]};
+})();
+function routeAt(s){ const {pts,L}=ROUTE; s=clamp(s,0,ROUTE.total); let i=1; while(i<L.length-1&&L[i]<s)i++;
+  const u=(s-L[i-1])/Math.max(1e-6,L[i]-L[i-1]); return [lerp(pts[i-1][0],pts[i][0],u),lerp(pts[i-1][1],pts[i][1],u)]; }
+const T_STOP=b(2), T_PILL=b(2,2);
+function dotS(t){ // arc length travelled
+  if (t < T_STOP) return ROUTE.gary * (0.18 + 0.82 * (t / T_STOP));
+  const k = t - T_STOP; return ROUTE.gary + 10 * Math.exp(-k * 9) * Math.sin(k * 26);
+}
+function drawMap(ctx, t, alpha){
+  const z = kf(t, [[0,1.5],[T_PILL,1.5],[T_PILL+0.6,1.0,E.outCubic]]);
+  const dot = routeAt(dotS(t));
+  const lag = routeAt(dotS(Math.max(0, t - 0.14)));
+  const cam = t < T_STOP ? lag : [lerp(lag[0],dot[0],P(t,T_STOP,T_STOP+0.3)), lerp(lag[1],dot[1],P(t,T_STOP,T_STOP+0.3))];
+  const tf = (x,y) => [(x-cam[0])*z+960, (y-cam[1])*z+540];
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.fillStyle = CREAM; ctx.fillRect(0,0,W,H);
+  // dot grid
+  ctx.fillStyle = '#e7e2d7';
+  for (let gx=-600; gx<2600; gx+=56) for (let gy=-600; gy<1800; gy+=56) { const g=tf(gx,gy); if (g[0]<-10||g[0]>W+10||g[1]<-10||g[1]>H+10) continue; ctx.beginPath(); ctx.arc(g[0],g[1],1.3*z,0,7); ctx.fill(); }
+  // lake + minor roads
+  ctx.fillStyle = '#eceee8'; ctx.beginPath();
+  let q = tf(-400,-400); ctx.moveTo(q[0],q[1]); for (const p of [[420,-400],[330,120],[250,290],[120,330],[-400,300]]) { q=tf(p[0],p[1]); ctx.lineTo(q[0],q[1]); } ctx.fill();
+  ctx.strokeStyle = '#e4dfd4'; ctx.lineWidth = 1.6*z;
+  for (const r of [[[-300,250],[700,300],[2200,330]],[[-300,560],[900,530],[2300,640]],[[300,1300],[640,700],[980,-400]],[[1300,1400],[1250,700],[1500,-300]]]) {
+    ctx.beginPath(); let a=tf(...r[0]),c=tf(...r[1]),d=tf(...r[2]); ctx.moveTo(a[0],a[1]); ctx.quadraticCurveTo(c[0],c[1],d[0],d[1]); ctx.stroke(); }
+  ctx.font = `italic ${Math.round(24*z)}px 'Instrument Serif'`; ctx.fillStyle = '#9aa39a'; q = tf(40,200); ctx.fillText('Lake Michigan', q[0], q[1]);
+  // state line IL | IN
+  ctx.save(); ctx.setLineDash([3*z,7*z]); ctx.strokeStyle='#cfc7b8'; ctx.lineWidth=1.4*z; ctx.beginPath(); let s0=tf(612,300), s1=tf(612,1500); ctx.moveTo(s0[0],s0[1]); ctx.lineTo(s1[0],s1[1]); ctx.stroke(); ctx.restore();
+  ctx.font = `600 ${Math.round(11*z)}px Inter`; ctx.fillStyle='#b5ad9f'; q=tf(578,760); ctx.fillText('IL',q[0],q[1]); q=tf(628,760); ctx.fillText('IN',q[0],q[1]);
+  ctx.strokeStyle = '#ddd6c9'; ctx.lineWidth = 2.2*z;
+  for (const r of [[[260,380],[520,560],[640,900]],[[720,470],[980,400],[1500,330]],[[1240,620],[1180,900],[1250,1300]],[[1690,800],[1900,700],[2300,640]]]) { ctx.beginPath(); let a=tf(...r[0]),c=tf(...r[1]),d=tf(...r[2]); ctx.moveTo(a[0],a[1]); ctx.quadraticCurveTo(c[0],c[1],d[0],d[1]); ctx.stroke(); }
+  ctx.font = `500 ${Math.round(11.5*z)}px Inter`; ctx.fillStyle = '#aaa294';
+  for (const [txt,x,y] of [['MERRILLVILLE',820,640],['CROWN POINT',700,730],['VALPARAISO',1020,440],['LAFAYETTE',1120,960],['JOLIET',150,640],['KANKAKEE',420,960]]) { q=tf(x,y); ctx.fillText(txt, q[0], q[1]); }
+  // route: ahead (dashed) then travelled (solid)
+  const sNow = dotS(t), stopped = t >= T_STOP;
+  const path = (s0, s1) => { ctx.beginPath(); let first=true; for (let i=0;i<ROUTE.pts.length;i++){ if (ROUTE.L[i]<s0||ROUTE.L[i]>s1) continue; const p=tf(...ROUTE.pts[i]); first?ctx.moveTo(p[0],p[1]):ctx.lineTo(p[0],p[1]); first=false; } };
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.setLineDash([8*z,10*z]); ctx.lineWidth=2.6*z;
+  const alertA = stopped ? Math.max(0.35, 1 - P(t,T_STOP+0.2,T_STOP+1.2)) : 0;
+  ctx.strokeStyle = stopped ? `rgba(232,80,30,${0.35+0.5*alertA})` : '#c9c1b3';
+  path(sNow, ROUTE.total); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = INK; ctx.lineWidth = 3.6*z; path(0, sNow); ctx.stroke();
+  // labels + shield
+  ctx.font = `600 ${Math.round(13*z)}px Inter`; ctx.fillStyle = '#8d877c';
+  for (const [txt,x,y] of [['CHICAGO',200,340],['GARY',700,510],['INDIANAPOLIS',1600,850],['HAMMOND',560,420]]) { q=tf(x,y); ctx.save(); ctx.translate(q[0],q[1]); ctx.fillText(txt.split('').join(String.fromCharCode(8202)),0,0); ctx.restore(); }
+  q = tf(980,548); ctx.fillStyle='#fff'; ctx.strokeStyle='#8d877c'; ctx.lineWidth=1.4*z; rr(ctx,q[0]-16*z,q[1]-12*z,32*z,24*z,6*z); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#5d584f'; ctx.font=`700 ${Math.round(12*z)}px Inter`; ctx.textAlign='center'; ctx.fillText('65',q[0],q[1]+4.5*z); ctx.textAlign='left';
+  // the dot (carrier) - drawn until the pill takes it
+  if (t < T_PILL + 0.12) {
+    const d = tf(...dot);
+    const beatPh = ((t - 0.017) / 0.6) % 1;
+    if (!stopped) { ctx.strokeStyle=`rgba(232,80,30,${0.35*(1-beatPh)})`; ctx.lineWidth=2*z; ctx.beginPath(); ctx.arc(d[0],d[1],(10+26*E.outCubic(beatPh))*z,0,7); ctx.stroke(); }
+    if (stopped) { const a = P(t,T_STOP,T_STOP+0.55,E.outCubic); ctx.strokeStyle=`rgba(232,80,30,${0.6*(1-a)})`; ctx.lineWidth=3*z; ctx.beginPath(); ctx.arc(d[0],d[1],(12+110*a)*z,0,7); ctx.stroke(); }
+    const k = t - T_STOP, sq = stopped ? 1 + 0.55*Math.exp(-k*8)*Math.cos(k*30) : 1;
+    ctx.save(); ctx.translate(d[0],d[1]); ctx.scale(sq, 1/Math.sqrt(sq));
+    ctx.shadowColor='rgba(232,80,30,.45)'; ctx.shadowBlur=18; ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(0,0,13*z,0,7); ctx.fill();
+    ctx.shadowBlur=0; ctx.fillStyle=OR; ctx.beginPath(); ctx.arc(0,0,9*z,0,7); ctx.fill(); ctx.restore();
+    // truck label chip
+    const la = 1 - P(t, T_STOP+0.25, T_STOP+0.45);
+    if (la > 0) { ctx.globalAlpha = alpha*la; ctx.fillStyle=INK; rr(ctx,d[0]+20*z,d[1]-40*z,92*z,28*z,14*z); ctx.fill();
+      ctx.fillStyle='#fff'; ctx.font=`600 ${Math.round(13*z)}px Inter`; ctx.fillText('Truck 47', d[0]+33*z, d[1]-21.5*z); ctx.globalAlpha=alpha; }
+  }
+  ctx.restore();
+  return {dot: tf(...dot), z};
+}
+
+// ---------------- aerial with route overlay (any rect) ----------------
+function aerialOverlay(ctx, x, y, w, h, t) {
+  const sc = w / 1920, N = (u,v) => [x+u*w, y+v*h];
+  const route = [[0.556,0.86],[0.548,0.62],[0.531,0.34],[0.521,0.12],[0.516,-0.02]];
+  const pd = P(t, 13.35, 14.25, E.inOutCubic);
+  let len=0; const seg=[]; for (let i=1;i<route.length;i++){ const a=N(...route[i-1]),c=N(...route[i]); const l=Math.hypot(c[0]-a[0],c[1]-a[1]); seg.push([a,c,l]); len+=l; }
+  let rem = len*pd;
+  ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.shadowColor='rgba(232,80,30,.9)'; ctx.shadowBlur=24*sc; ctx.strokeStyle=OR; ctx.lineWidth=9*sc; ctx.beginPath();
+  let started=false;
+  for (const [a,c,l] of seg){ if (rem<=0) break; const u=Math.min(1,rem/l); if(!started){ctx.moveTo(a[0],a[1]);started=true;} ctx.lineTo(lerp(a[0],c[0],u),lerp(a[1],c[1],u)); rem-=l; }
+  if (pd>0) ctx.stroke();
+  ctx.shadowBlur=0;
+  const s = N(0.556,0.86), ph = ((t-0.017)/0.6)%1;
+  ctx.strokeStyle=`rgba(255,255,255,${0.7*(1-ph)})`; ctx.lineWidth=3*sc; ctx.beginPath(); ctx.arc(s[0],s[1],(16+34*ph)*sc,0,7); ctx.stroke();
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(s[0],s[1],15*sc,0,7); ctx.fill(); ctx.fillStyle=OR; ctx.beginPath(); ctx.arc(s[0],s[1],10*sc,0,7); ctx.fill();
+  const chip = (cx, cy, text, a) => { if (a<=0) return; ctx.globalAlpha=a; ctx.font=`600 ${Math.round(26*sc)}px Inter`; const tw=ctx.measureText(text).width;
+    ctx.fillStyle='rgba(20,20,20,.62)'; rr(ctx,cx,cy,tw+44*sc,54*sc,27*sc); ctx.fill(); ctx.fillStyle='#fff'; ctx.fillText(text,cx+22*sc,cy+36*sc); ctx.globalAlpha=1; };
+  chip(s[0]+36*sc, s[1]-27*sc, 'Truck 52 · Marco', P(t,13.4,13.7));
+  const e = N(0.52,0.1); chip(e[0]-620*sc, e[1], 'Jensen 4128 · Chicago · 38 mi · ETA 08:41', P(t,13.95,14.25));
+  ctx.restore();
+}
+function drawAerial(ctx, x, y, w, h, t, zoom=1) {
+  return seq.aer.at((t-11.9)*0.5, 'pingpong').then(im => { cover(ctx, im, x, y, w, h, {zoom}); aerialOverlay(ctx, x, y, w, h, t); });
+}
+
+// ---------------- board ----------------
+const COLX = [198, 363, 528, 693, 858];           // board-local day column x
+const ROWS = [['47','Ray Porter','Out of service'],['19','Jin Nguyen','Joliet yard'],['61','Dana Cole','Indianapolis'],['33','Luis Reyes','Chicago yard'],['52','Marco Alvarez','Empty · Hammond']];
+const rowY = r => 116 + r*104;
+const BLOCKS = [
+  {id:'jensen', c:'Jensen 4128', r:'CHI → CMH · 09:30', row:0, col:0, acc:OR},
+  {id:'mp',     c:'Midwest 3310', r:'JOL → DAY · 07:00', row:0, col:1, acc:OR},
+  {id:'t1', c:'Target 8812', r:'JOL → STL', row:1, col:0}, {id:'t2', c:'Target 8830', r:'JOL → STL', row:1, col:4},
+  {id:'s1', c:'Sysco 1022', r:'IND → LOU', row:2, col:0}, {id:'s2', c:'Sysco 1027', r:'IND → CIN', row:2, col:1},
+  {id:'h1', c:'Home Depot 551', r:'CHI → MKE', row:3, col:1}, {id:'h2', c:'Home Depot 553', r:'MKE → CHI', row:3, col:2},
+  {id:'k1', c:'Kroger 2291', r:'HAM → FWA', row:4, col:1}, {id:'k2', c:'Kroger 2297', r:'FWA → HAM', row:4, col:2},
+];
+function buildBoard(){
+  $('rows').innerHTML = ROWS.map((r,i)=>`<div class="rowl" style="top:${rowY(i)}px"><div class="lab"><div class="badge"${i===0?' style="background:#9b958a"':''}>${r[0]}</div><div><div class="nm">${r[1]}</div><div class="st">${r[2]}</div></div></div></div>`).join('');
+  $('blocks').innerHTML = BLOCKS.map(k=>`<div class="blk" id="b_${k.id}" style="--acc:${k.acc||INK}"><div class="c">${k.c}</div><div class="r">${k.r}</div><div class="ok"></div></div>`).join('');
+}
+const cell = (row,col) => [COLX[col]+8, rowY(row)+14];
+// browser rest geometry and its screen-space mapping (for cursor targets)
+const BR = {x:170, y:100};
+const boardToScreen = (bx,by) => [BR.x + 540 + bx, BR.y + 64 + by];
+
+// ---------------- boot ----------------
+window.boot = async () => {
+  $('cursor').innerHTML = CURSOR_SVG;
+  buildBoard();
+  await fontsReady(["500 20px Inter","600 20px Inter","700 20px Inter","400 40px 'Instrument Serif'","italic 400 40px 'Instrument Serif'"]);
+  await Promise.all([seq.brk.at(0), seq.aer.at(0), seq.silk.at(0), seq.roll.at(0)]);
+  window.WMW = $('wm').getBoundingClientRect().width || 560;
+};
+
+// ---------------- cursor path ----------------
+const CUR = [
+  [3.617,1580,1010],[4.12,1190,566,E.outCubic],[4.4,1196,572],[5.3,1310,720],[6.7,1270,770],
+  [8.95,1250,760],[9.5,968,612,E.inOutCubic],[10.6,1030,640],[11.55,960,524,E.inOutCubic],[12.2,962,526],
+  [14.95,1180,720],[15.25,990,332,E.outCubic],[15.417,990,330],[16.217,990,746,E.inOutCubic],[16.7,1060,860],
+  [17.4,1100,860],[17.96,1234,968,E.inOutCubic],[19.3,1242,982],[21.6,1236,976],
+];
+const CLICKS = [4.217, 9.617, 12.017, 15.317, 18.017];
+
+// ---------------- seek ----------------
+window.seek = async (t) => {
+  bg.clearRect(0,0,W,H); tp.clearRect(0,0,W,H);
+
+  // ===== 1. map -> dot stops -> pill =====
+  let mapInfo = null;
+  if (t < 5.0) mapInfo = drawMap(bg, t, 1);
+  show($('clock'), t < 4.3);
+  $('clock').style.opacity = P(t,0.15,0.5) * (1 - P(t,3.9,4.25));
+
+  // pill / card / full-bleed footage: one object on bg canvas
+  if (t >= T_PILL && t < 13.76) {
+    const hh = kf(t, [[T_PILL,22],[T_PILL+0.2,68,E.outBack],[4.33,68],[4.817,496,E.outExpo],[5.25,1080,E.outExpo]]);
+    const ww = kf(t, [[T_PILL,22],[T_PILL+0.06,26],[T_PILL+0.5,660,E.outExpo],[4.33,660],[4.817,880,E.outExpo],[5.25,1920,E.outExpo]]);
+    const cy = kf(t, [[4.33,540],[4.817,540],[5.25,540]]);
+    const rad = t < 4.33 ? hh/2 : kf(t, [[4.33,34],[4.817,34],[5.25,0,E.outExpo]]);
+    const x = 960-ww/2, y = cy-hh/2;
+    const reveal = P(t, 4.36, 4.82, E.inOutCubic);          // headlight-shaped reveal of footage
+    if (reveal > 0) {
+      const im = await seq.brk.at((t-4.35)*0.5);
+      const push = kf(t, [[4.8,1.06],[5.25,1.0,E.outExpo],[13.76,1.09,E.lin]]);
+      cover(bg, im, x, y, ww, hh, {zoom: push, radius: rad, fx:0.45, fy:0.5});
+      if (t > 7.1) { bg.save(); bg.globalAlpha = 0.28*P(t,7.1,7.6); bg.fillStyle='#0a1016'; bg.fillRect(0,0,W,H); bg.restore(); }
+    }
+    if (reveal < 1) {
+      bg.save(); rr(bg, x, y, ww, hh, rad); bg.clip();
+      if (reveal <= 0) { bg.fillStyle = INK; bg.fillRect(x,y,ww,hh); }
+      else { const hx = x+ww*0.33, hy = y+hh*0.58, R = Math.hypot(ww,hh)*reveal*1.1;
+        const g = bg.createRadialGradient(hx,hy,Math.max(0,R-160),hx,hy,R+1); g.addColorStop(0,'rgba(37,35,32,0)'); g.addColorStop(1,'rgba(37,35,32,1)');
+        bg.fillStyle = g; bg.fillRect(x,y,ww,hh); }
+      bg.restore();
+    }
+    // the carrier dot lives on inside the pill (left end)
+    if (t < 4.45) { const dx = x + Math.min(34, ww/2), a = 1 - P(t,4.3,4.45);
+      bg.save(); bg.globalAlpha=a; const ph=((t-0.017)/0.6)%1;
+      bg.fillStyle=`rgba(232,80,30,${0.45*(1-ph)})`; bg.beginPath(); bg.arc(dx,540,8+12*ph,0,7); bg.fill();
+      bg.fillStyle=OR; bg.beginPath(); bg.arc(dx,540,8,0,7); bg.fill(); bg.restore(); }
+    // pill label
+    const pt = $('pillText'); const la = P(t,T_PILL+0.26,T_PILL+0.5,E.outCubic)*(1-P(t,4.28,4.4));
+    show(pt, la > 0.001);
+    css(pt, {left:px(x), top:px(540-34), width:px(ww), opacity:la, clipPath:`inset(0 ${(1-P(t,T_PILL+0.22,T_PILL+0.62,E.outCubic))*100}% 0 0)`});
+  } else show($('pillText'), false);
+
+  // ===== 2. toasts over footage =====
+  const TT = [b(3,2), b(3,2,1), b(3,3), b(3,3,1)];
+  const ABS = [b(4,2), b(4,2,1), b(4,3), b(4,3,1)];
+  show($('toasts'), t > TT[0]-0.05 && t < ABS[3]+0.5);
+  for (let i=0;i<4;i++){
+    const el = $('t'+i), a = P(t, TT[i], TT[i]+0.38, E.outExpo);
+    let stackY = 0; for (let j=i+1;j<4;j++) stackY += 98*S(t, TT[j], 16, 0.72);
+    // absorbed into the panel header (arc toward the '0 linked' chip)
+    const ab = P(t, ABS[i], ABS[i]+0.34, E.inCubic);
+    const tx = (1-a)*90 + lerp(0, -166, ab);
+    const ty = stackY + lerp(0, 204 - stackY, ab) - 60*Math.sin(ab*Math.PI);
+    const sc = lerp(1, 0.12, ab);
+    css(el, {opacity: a*(1-P(t,ABS[i]+0.22,ABS[i]+0.34)), transform:`translate(${px(tx)},${px(ty)}) scale(${sc.toFixed(3)})`,
+      filter:`blur(${((1-a)*8 + ab*6).toFixed(2)}px)`, transformOrigin:'0 50%'});
+  }
+  // kinetic line
+  const kin = $('kin1'); show(kin, t > b(3,4)-0.05 && t < 7.35);
+  [...kin.children].forEach((s,i)=>{ const a=P(t,b(3,4)+i*0.1,b(3,4)+i*0.1+0.34,E.outExpo), o=P(t,7.0+i*0.04,7.25+i*0.04,E.inCubic);
+    css(s,{opacity:a*(1-o), transform:`translateY(${px((1-a)*46 - o*40)})`, filter:`blur(${((1-a)*14+o*10).toFixed(1)}px)`}); });
+
+  // ===== 3. coverage panel =====
+  const pn = $('panel'); const pIn = S(t, b(4), 11, 0.74), pOn = t > b(4)-0.02 && t < 13.75;
+  show(pn, pOn);
+  if (pOn) {
+    const ph = kf(t, [[9.617,452],[10.05,520,E.outExpo]]);
+    css(pn, {height:px(ph), transform:`translateY(${px((1-pIn)*420)}) scale(${(0.94+0.06*pIn).toFixed(4)})`, opacity: clamp(pIn*1.6)});
+    const linked = ABS.filter(v => t >= v+0.3).length; $('linked').textContent = `${linked} linked`;
+    $('linked').style.transform = `scale(${(1+0.18*ABS.reduce((m,v)=>Math.max(m, Math.exp(-Math.max(0,t-v-0.3)*10)*(t>=v+0.3)),0)).toFixed(3)})`;
+    const out = P(t, 9.617, 9.82, E.inCubic), inn = P(t, 9.7, 10.0, E.outExpo);
+    css($('stA'), {opacity:1-out, transform:`translateY(${px(-40*out)})`, filter:`blur(${(out*8).toFixed(1)}px)`});
+    show($('stA'), out < 1);
+    const bf = $('btnFind'); const press = CLICKS.some(c=>t>c-0.06&&t<c+0.16&&c===9.617) ? 0.97 : 1;
+    css(bf, {transform:`scale(${press})`});
+    show($('stB'), inn > 0);
+    css($('stB'), {opacity: inn, transform:`translateY(${px((1-inn)*40)})`});
+    for (let i=0;i<4;i++){ const st=b(5,1,i), d=t>=st+0.3; const el=$('s'+i);
+      css(el,{opacity:P(t,st,st+0.2), transform:`translateX(${px((1-P(t,st,st+0.3,E.outExpo))*24)})`});
+      el.querySelector('.ic').className = 'ic' + (d?' done':''); el.querySelector('.v').style.opacity = d?1:0; }
+    for (let i=0;i<3;i++){ const st=b(6-1,3,i)+0.0; const s0 = [10.817,11.117,11.417][i];
+      const a = P(t,s0,s0+0.42,E.outExpo); const el=$('c'+i);
+      const hl = i===0 ? P(t,11.45,11.65) : 0;
+      css(el,{opacity:a, transform:`translateY(${px((1-a)*36)}) scale(${(1+0.012*hl).toFixed(4)})`,
+        borderColor: i===0 ? `rgba(232,80,30,${0.15+0.7*hl})` : '', boxShadow: i===0 ? `0 ${10*hl}px ${30*hl}px rgba(232,80,30,${0.18*hl})` : ''}); }
+  }
+
+  // ===== 4. glass lens -> aerial portal (top canvas) =====
+  if (t >= 12.017 && t < 14.417) {
+    const r = t < 13.217 ? 205*E.spring(Math.max(0,t-12.017), 13, 0.62) : lerp(205, 2300, P(t,13.217,13.72,E.inCubic));
+    const cx = kf(t, [[12.017,960],[13.217,960],[13.72,960]]), cy = kf(t, [[12.017,524],[12.6,516,E.outCubic],[13.217,516],[13.72,540,E.inCubic]]);
+    const zoom = lerp(1.18, 1.0, P(t,13.217,13.72,E.inCubic));
+    tp.save();
+    if (r < 2200) { tp.shadowColor='rgba(0,0,0,.45)'; tp.shadowBlur=60; tp.fillStyle='#000'; tp.beginPath(); tp.arc(cx,cy,Math.max(0,r),0,7); tp.fill(); tp.shadowBlur=0; }
+    tp.beginPath(); tp.arc(cx,cy,Math.max(0.01,r),0,7); tp.clip();
+    await drawAerial(tp, 0, 0, W, H, t, zoom);
+    if (r < 2200) {
+      const g = tp.createRadialGradient(cx,cy,r*0.72,cx,cy,r); g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(1,'rgba(255,255,255,.32)');
+      tp.fillStyle = g; tp.fillRect(cx-r,cy-r,2*r,2*r);
+      tp.strokeStyle='rgba(255,255,255,.85)'; tp.lineWidth=2.5; tp.beginPath(); tp.arc(cx,cy,Math.max(0,r-1.2),0,7); tp.stroke();
+      tp.strokeStyle='rgba(255,255,255,.55)'; tp.lineWidth=6; tp.beginPath(); tp.arc(cx,cy,Math.max(0,r*0.86),-2.6,-1.7); tp.stroke();
+    }
+    tp.restore();
+  }
+
+  // ===== 5. browser pull-back, drag, phone =====
+  const brOn = t >= 14.417 && t < 21.98;
+  show($('browser'), brOn);
+  if (brOn) {
+    const silk = await seq.silk.at((t-14.3)*0.8, 'pingpong');
+    cover(bg, silk, 0, 0, W, H, {zoom:1.08, fx:0.5, fy:0.5});
+    bg.save(); bg.globalAlpha=0.18; bg.fillStyle=CREAM; bg.fillRect(0,0,W,H); bg.restore();
+    // slot content
+    await drawAerial(slotc, 0, 0, W, H, t, 1);
+    // pull back: slot fills frame at 14.417, browser rests at BR by ~15.2
+    const p = P(t, 14.417, 15.35, E.inOutCubic);
+    const s = Math.exp(lerp(Math.log(4), 0, p));
+    const sx = lerp(0, BR.x+24, p), sy = lerp(0, BR.y+70, p);
+    let bx = sx - 24*s, by = sy - 70*s;
+    const drift = 1 + 0.035*P(t, 15.35, b(8), E.inOutSine);
+    bx -= (drift-1)*s*790; by -= (drift-1)*s*440;
+    // phone act: browser slides left and turns
+    const q = P(t, b(8), b(8)+0.62, E.outExpo);
+    const push = P(t, 20.7, 21.617, E.inOutCubic);
+    css($('browser'), {transform:`translate(${px(bx - 130*q)},${px(by + 40*q)}) scale(${(s*drift*(1-0.2*q)).toFixed(4)}) rotateY(${(13*q).toFixed(2)}deg)`,
+      borderRadius: px(22 + (1-p)*0)});
+    // board: drag Jensen from row0/Thu to row4/Thu, then 3310 glides to row1/Fri
+    const grab = 15.317, drop = b(7,4), auto = b(7,4,1);
+    for (const k of BLOCKS) {
+      const el = $('b_'+k.id); let [x,y] = cell(k.row,k.col), rot=0, sc=1, sh=0, z=1;
+      if (k.id==='jensen') {
+        const lift = P(t,grab,grab+0.14,E.outCubic)*(1-P(t,drop,drop+0.12));
+        const mv = P(t, grab+0.1, drop, E.inOutCubic);
+        const [tx,ty] = cell(4,0);
+        const v = Math.sin(mv*Math.PI);
+        x = x; y = lerp(y, ty, mv) - 6*lift;
+        rot = -3.5*v*lift; sc = 1 + 0.07*lift; sh = lift; z = 5;
+        const dq = t>=drop ? Math.exp(-(t-drop)*14)*Math.sin((t-drop)*40)*0.05 : 0; sc *= 1 - dq;
+        if (t >= drop) el.style.setProperty('--acc','#2f8a4a');
+      }
+      if (k.id==='mp') { const mv = P(t, auto, auto+0.42, E.inOutCubic); const [tx,ty]=cell(1,1); x=lerp(x,tx,mv); y=lerp(y,ty,mv);
+        sh = Math.sin(mv*Math.PI)*0.7; sc = 1+0.05*Math.sin(mv*Math.PI); if (t>=auto+0.42) el.style.setProperty('--acc','#2f8a4a'); }
+      css(el, {left:px(x), top:px(y), transform:`rotate(${rot.toFixed(2)}deg) scale(${sc.toFixed(4)})`, zIndex:z,
+        boxShadow:`0 ${2+22*sh}px ${4+40*sh}px rgba(40,24,10,${0.06+0.2*sh})`});
+      el.querySelector('.ok').style.display = (k.id==='jensen' && t>=20.117) || (k.id==='mp' && t>=20.3) ? 'block' : 'none';
+    }
+    const hat = $('hatch'); css(hat, {opacity: 0.35 + 0.65*(1-P(t,drop,drop+0.3)) });
+    const upd = $('updChip'); show(upd, t >= 16.65); upd.style.transform = `scale(${(0.6+0.4*E.spring(Math.max(0,t-16.65),16,0.5)).toFixed(3)})`;
+    // phone
+    const phn = $('phone'); const pi = S(t, b(8), 12, 0.74); show(phn, t >= b(8));
+    css(phn, {transform:`translateY(${px((1-pi)*900)}) rotate(${((1-pi)*6).toFixed(2)}deg)`});
+    const DRAFT = 'Morning Marco. Can you take Jensen 4128? Pickup Chicago 09:30, drop Columbus by 17:00. Rate confirmed.';
+    const words = DRAFT.split(' '); const nw = Math.round(words.length * P(t, 16.95, 17.85, E.lin));
+    $('draftTxt').textContent = words.slice(0, nw).join(' ');
+    const sent = t >= b(9);
+    $('draft').className = 'bub out' + (sent ? ' sent' : '');
+    $('draftTm').textContent = sent ? (t >= 19.8 ? '06:21 ✓✓' : '06:21 ✓') : '06:21';
+    $('draftTm').style.color = t >= 19.8 ? '#3a8ee6' : '';
+    const dl = $('dlabel'); dl.style.opacity = 1 - P(t, b(9), b(9)+0.2); dl.style.transform=`translateY(${px(-8*P(t,b(9),b(9)+0.2))})`;
+    const dr = $('draft'); dr.style.transform = sent ? `scale(${(1+0.05*Math.exp(-(t-b(9))*12)).toFixed(4)})` : '';
+    const rp = $('reply'); const ra = S(t, b(9,3), 18, 0.6); show(rp, t >= b(9,3));
+    css(rp, {transform:`scale(${(0.6+0.4*ra).toFixed(3)})`, transformOrigin:'0 0', opacity: clamp(ra*2)});
+    // draft cards
+    for (const [id, st, x0, y0] of [['d0', b(8,1,1), 996, 560], ['d1', b(8,2), 996, 672]]) {
+      const el = $(id), a = P(t, st, st+0.42, E.outExpo); show(el, t >= st);
+      css(el, {left:px(x0), top:px(y0), opacity:a, transform:`translateX(${px(-60*(1-a))})`, filter:`blur(${((1-a)*8).toFixed(1)}px)`});
+    }
+    for (const [id, st] of [['d0s', 19.517], ['d1s', 19.817]]) { const el=$(id); const done = t >= st; el.textContent = done ? 'Sent ✓' : 'Draft'; el.className = 'chip ' + (done?'ok':'tan'); }
+    // approval bar
+    const ap = $('appr'), aa = S(t, b(8,2,1), 13, 0.72); show(ap, t >= b(8,2,1));
+    css(ap, {transform:`translateY(${px((1-aa)*200)})`});
+    const fill = t < 18.017 ? 0 : E.inQuad(P(t, 18.017, b(9), E.lin));
+    $('sendFill').style.width = `${(fill*100).toFixed(2)}%`;
+    $('sendLbl').textContent = t < 18.017 ? 'Approve & send' : (sent ? 'Sent ✓' : 'Sending…');
+    $('apprT').textContent = sent ? '3 messages sent' : '3 messages ready';
+    const bs = $('btnSend'); const pop = sent ? 1 + 0.12*Math.exp(-(t-b(9))*9)*Math.cos((t-b(9))*18) : (t>18.0&&t<18.2 ? 0.95 : 1);
+    bs.style.transform = `scale(${pop.toFixed(4)})`;
+    bs.style.boxShadow = sent ? `0 0 ${(30*Math.exp(-(t-b(9))*3)).toFixed(1)}px rgba(232,80,30,.8)` : '';
+    // camera push toward the Sent button
+    const ui = $('ui'); ui.style.transformOrigin = '1234px 974px'; ui.style.transform = `scale(${(1+0.12*push).toFixed(4)})`;
+  } else { $('ui').style.transform = ''; show($('phone'), false); show($('appr'), false); show($('d0'), false); show($('d1'), false); }
+
+  // ===== 6. iris into the truck rolling out =====
+  const IR = b(10);
+  if (t >= IR - 0.001) {
+    const rOr = lerp(0, 2300, P(t, IR, IR+0.3, E.inCubic));
+    const rr0 = t < IR + 0.62 ? lerp(0, 2300, P(t, IR+0.24, IR+0.62, E.inCubic)) : 99999;
+    if (t < IR + 0.62) { tp.fillStyle = OR; tp.beginPath(); tp.arc(1234,974,rOr,0,7); tp.fill(); }
+    const im = await seq.roll.at(t - IR);
+    const collapse = P(t, b(12,3), b(12,3)+0.55, E.inOutCubic);
+    const sq = lerp(1, 0, collapse);
+    const ww = lerp(240, W, sq), hh = lerp(240, H, sq), cxs = 960, cys = lerp(480, 540, sq);
+    const rad = lerp(56, 0, sq);
+    if (collapse > 0) { tp.fillStyle = CREAM; tp.fillRect(0,0,W,H); }
+    tp.save();
+    if (rr0 < 99999) { tp.beginPath(); tp.arc(1000,560,rr0,0,7); tp.clip(); }
+    cover(tp, im, cxs-ww/2, cys-hh/2, ww, hh, {radius: rad, zoom: lerp(1.0, 1.25, collapse) * kf(t,[[IR+0.24,1.18],[IR+0.9,1.0,E.outExpo]])});
+    // legibility gradient + gap darken
+    tp.save(); rr(tp, cxs-ww/2, cys-hh/2, ww, hh, rad); tp.clip();
+    const g = tp.createLinearGradient(0,H*0.45,0,H); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,`rgba(0,0,0,${0.5*(1-collapse)})`); tp.fillStyle=g; tp.fillRect(0,0,W,H);
+    const dark = P(t,26.12,26.4)*(1-P(t,26.42,26.9)); if (dark>0){ tp.fillStyle=`rgba(0,0,0,${0.35*dark})`; tp.fillRect(0,0,W,H); }
+    // becomes the icon
+    const orA = P(t, b(12,3)+0.32, b(12,3)+0.55, E.inOutCubic);
+    if (orA > 0) { tp.fillStyle = `rgba(232,80,30,${orA})`; tp.fillRect(0,0,W,H); }
+    tp.restore();
+    if (rr0 > 0 && rr0 < 2300) { tp.strokeStyle = 'rgba(255,238,220,.9)'; tp.lineWidth = 6; tp.beginPath(); tp.arc(1000,560,rr0,0,7); tp.stroke(); }
+    tp.restore();
+    // icon chart line draws, carrier dot pops at its end
+    const LK = b(13);
+    const iconMove = P(t, LK, LK+0.6, E.inOutCubic);
+    if (collapse >= 1) {
+      // redraw icon as a clean vector once the footage is gone
+      tp.fillStyle = CREAM; tp.fillRect(0,0,W,H);
+      const LX = 960 - (170 + 30 + window.WMW)/2; const isz = lerp(240, 170, iconMove), icx = lerp(960, LX+85, iconMove), icy = 480;
+      tp.fillStyle = OR; rr(tp, icx-isz/2, icy-isz/2, isz, isz, isz*0.235); tp.fill();
+      const sc = isz/64, ox = icx-isz/2, oy = icy-isz/2;
+      const pts = [[13,46],[26,32],[35,39],[49,21]]; const dp = P(t, b(12,3)+0.5, b(12,4)+0.25, E.inOutCubic);
+      let L=0; const segs=[]; for (let i=1;i<pts.length;i++){ const l=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]); segs.push(l); L+=l; }
+      let rem = L*dp; tp.strokeStyle='#fff'; tp.lineWidth=5.5*sc; tp.lineCap='round'; tp.lineJoin='round'; tp.beginPath(); tp.moveTo(ox+pts[0][0]*sc, oy+pts[0][1]*sc);
+      for (let i=1;i<pts.length && rem>0;i++){ const u=Math.min(1,rem/segs[i-1]); tp.lineTo(ox+lerp(pts[i-1][0],pts[i][0],u)*sc, oy+lerp(pts[i-1][1],pts[i][1],u)*sc); rem-=segs[i-1]; }
+      tp.stroke();
+      const dpop = E.spring(Math.max(0, t - (b(12,4)+0.25)), 18, 0.45);
+      if (dpop > 0) { tp.fillStyle='#fff'; tp.beginPath(); tp.arc(ox+50*sc, oy+19*sc, 5*sc*dpop, 0, 7); tp.fill(); }
+    }
+  }
+  // words
+  const wd = $('words'); show(wd, t > b(10,3)-0.05 && t < b(11,3)+0.5);
+  const WT = [b(10,3), b(10,4), b(11)];
+  [...wd.children].forEach((s,i)=>{ const a=P(t,WT[i],WT[i]+0.34,E.outExpo), o=P(t,b(11,3)+i*0.06,b(11,3)+i*0.06+0.3,E.inCubic);
+    css(s,{opacity:a*(1-o), transform:`translateY(${px((1-a)*60 - o*50)}) scale(${(1.06-0.06*a).toFixed(3)})`, filter:`blur(${((1-a)*16+o*12).toFixed(1)}px)`}); });
+  const hd = $('handled'); const HT = b(12); show(hd, t > HT-0.02 && t < b(12,3)+0.4);
+  { const a = P(t, HT, HT+0.3, E.outExpo), col = P(t, b(12,3), b(12,3)+0.55, E.inOutCubic), fade = P(t, b(12,3)+0.2, b(12,3)+0.4);
+    const k = lerp(1, 240/1920, col), dy = lerp(0, -60, col);
+    css(hd, {opacity: a*(1-fade), transformOrigin:'960px 150px', transform:`translateY(${px(dy)}) scale(${((1.14-0.14*a)*k).toFixed(4)})`, filter:`blur(${((1-a)*18 + fade*6).toFixed(1)}px)`}); }
+  // lockup
+  const lk = $('lock'), LK = b(13); show(lk, t >= LK);
+  if (t >= LK) {
+    const wa = P(t, LK+0.42, LK+1.0, E.outExpo);
+    css($('wm'), {left:px(960 - (170 + 30 + window.WMW)/2 + 200), clipPath:`inset(0 ${(1-wa)*100}% 0 0)`, transform:`translateX(${px(-50*(1-wa))})`});
+    const ta = P(t, b(13,2), b(13,2)+0.5, E.outExpo); css($('tag'), {opacity:ta, transform:`translateY(${px(20*(1-ta))})`, filter:`blur(${((1-ta)*8).toFixed(1)}px)`});
+    const sa = P(t, b(13,3), b(13,3)+0.5, E.outExpo); css($('site'), {opacity:sa, letterSpacing:px(5+6*(1-sa))});
+  }
+
+  // cursor
+  const cOn = (t > 3.62 && t < 13.217) || (t > 14.95 && t < IR);
+  const c = cursorAt(t, CUR, CLICKS);
+  placeCursor($('cursor'), c, cOn, 1.25);
+
+  gr.clearRect(0,0,W,H); grain(gr, t, 1, 'source-over');
+};
+</script>
+</body>
+</html>

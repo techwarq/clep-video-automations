@@ -1,0 +1,62 @@
+<!doctype html>
+<!-- Meme · two-column VS over one Pinterest clip (7 s, clip audio kept).
+     Plan: beats = [{id:"b1", dur:7}], media = {clip: a vertical aesthetic clip, no burned-in text}.
+     The joke lives in the rows; the clip only sets the mood. Text is static like the
+     reference format — the footage supplies all the motion. -->
+<html>
+<head>
+<meta charset="utf-8">
+<script src="data.js"></script>
+<script src="runtime.js"></script>
+<style>
+  html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+  #bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  #shade { position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,.28) 0%, rgba(0,0,0,0) 45%, rgba(0,0,0,0) 80%, rgba(0,0,0,.25) 100%); }
+  .meme { position: absolute; left: 72px; right: 72px; top: 300px;
+    display: grid; grid-template-columns: 1fr 1fr; column-gap: 30px; row-gap: 46px;
+    font-family: 'Arial Rounded MT Bold', 'Helvetica Neue', sans-serif; color: #fff; text-align: center;
+    -webkit-text-stroke: 2px #000; paint-order: stroke fill;
+    text-shadow: 0 3px 10px rgba(0,0,0,.35); }
+  .head { font-size: 76px; letter-spacing: 1px; margin-bottom: 40px; }
+  .cell { font-size: 44px; line-height: 1.15; white-space: nowrap; }
+</style>
+</head>
+<body>
+<img id="bg">
+<div id="shade"></div>
+<div class="meme" id="meme"></div>
+<script>
+  // Content. In a generated reel these come from the plan; keep each phrase short enough for ONE line.
+  const LEFT = 'MONDAY', RIGHT = 'FRIDAY';
+  const ROWS = [
+    ['alarm x4.', 'up before it.'],
+    ['cold brew IV.', 'one coffee.'],
+    ['"per my last email"', '"sounds great!"'],
+    ['47 tabs open.', 'one tab: flights.'],
+    ['lunch at desk.', 'lunch is 2 hours.'],
+    ['counting minutes.', 'where did it go?'],
+  ];
+
+  const meme = R.$('meme');
+  meme.innerHTML = `<div class="head">${R.esc(LEFT)}</div><div class="head">${R.esc(RIGHT)}</div>` +
+    ROWS.map(([l, r]) => `<div class="cell">${R.esc(l)}</div><div class="cell">${R.esc(r)}</div>`).join('');
+
+  // Shrink the body size until the widest phrase fits its column (never wrap, never clip).
+  const colW = (1080 - 144 - 30) / 2;
+  let size = 44;
+  const cells = [...document.querySelectorAll('.cell')];
+  const widest = () => Math.max(...cells.map(c => c.scrollWidth));
+  while (size > 28 && widest() > colW) { size -= 1; cells.forEach(c => c.style.fontSize = size + 'px'); }
+
+  // Sound: the clip's own audio is the soundtrack.
+  R.clipAudio('clip', 0, { gain: 1 });
+
+  R.scene(t => {
+    // Footage: slow push so the frame never feels frozen behind static text.
+    R.show('bg', 'clip', t, { mode: 'loop' });
+    R.css('bg', { transform: `scale(${R.lerp(1.0, 1.06, t / R.dur)})` });
+  });
+</script>
+</body>
+</html>

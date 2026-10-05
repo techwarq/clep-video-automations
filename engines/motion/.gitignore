@@ -1,0 +1,12 @@
+# generated per project
+projects/*/renders/
+projects/*/stills/
+projects/*/.bundle/
+projects/*/.tmp/
+# engine build output
+engine/out/
+engine/build/
+engine/node_modules/
+
+logos/cache/
+

@@ -1,0 +1,461 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="assets/fonts.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#000;font-family:Geist,sans-serif;-webkit-font-smoothing:antialiased;color:#f2f2f2}
+.layer{position:absolute;left:0;top:0;width:1920px;height:1080px}
+#bg{z-index:0}
+#ui{position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:1}
+#top{z-index:2}
+#fx{position:absolute;left:0;top:0;width:1920px;height:1080px;z-index:3;pointer-events:none}
+#grain{z-index:5;mix-blend-mode:overlay;opacity:.55}
+.abs{position:absolute}
+.mono{font-family:'Geist Mono',ui-monospace,monospace}
+.blk{display:inline-block;width:.58em;height:1.08em;background:#f2f2f2;vertical-align:-.18em;margin-left:.08em}
+
+#line1{left:250px;top:470px;font-size:58px;white-space:nowrap;letter-spacing:-1px}
+#line1 .p{color:#5a5a5a;margin-right:22px}
+#err{left:250px;top:560px;font-size:30px;white-space:nowrap;color:#9a9a9a}
+#err b{color:#fff;font-weight:600}
+
+#pill{left:0;top:0;height:96px;border-radius:48px;background:#0c0c0c;border:1px solid #2e2e2e;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 30px 80px rgba(0,0,0,.6);display:flex;align-items:center;padding:0 40px;white-space:nowrap;font-size:40px}
+#pill .p{color:#6a6a6a;margin-right:18px}
+
+#term{left:0;top:0;width:1560px;height:820px;border-radius:20px;background:#0a0a0a;border:1px solid #262626;overflow:hidden;transform-origin:0 0;
+  box-shadow:0 50px 140px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.05)}
+#term .bar{position:absolute;left:0;top:0;width:100%;height:48px;border-bottom:1px solid #1d1d1d;background:#0e0e0e}
+#term .d{position:absolute;top:18px;width:12px;height:12px;border-radius:6px;background:#2c2c2c}
+#ttl{position:absolute;left:0;width:100%;top:14px;text-align:center;font-size:14px;color:#6d6d6d}
+#stat{position:absolute;right:18px;top:11px;height:26px;padding:0 12px;border-radius:13px;border:1px solid #2e2e2e;font-size:12.5px;display:flex;align-items:center;gap:7px;color:#cfcfcf}
+#stat i{width:7px;height:7px;border-radius:4px;background:#fff;display:block}
+#log{position:absolute;left:34px;top:74px;width:960px;height:720px;overflow:hidden;font-size:21px;line-height:35px;white-space:pre;color:#bdbdbd}
+#log .hi{color:#fff}
+#log .dim{color:#6a6a6a}
+#log .ok{color:#fff;font-weight:600}
+#pane{position:absolute;left:1020px;top:48px;width:540px;height:772px;border-left:1px solid #1d1d1d}
+#cnt{position:absolute;left:40px;top:180px;font-size:190px;font-weight:700;letter-spacing:-8px;line-height:190px;font-variant-numeric:tabular-nums}
+#cntl{position:absolute;left:46px;top:386px;font-size:20px;color:#8a8a8a;letter-spacing:3px}
+#spec{position:absolute;left:46px;top:436px;font-size:17px;line-height:30px;color:#6d6d6d;white-space:pre}
+#tree{position:absolute;left:40px;top:34px;font-size:17px;line-height:31px;white-space:pre;color:#9a9a9a}
+#tree .n{color:#fff}
+#chart{position:absolute;left:40px;top:420px;width:460px;height:200px}
+#chip{position:absolute;left:40px;top:664px;height:40px;padding:0 16px;border-radius:20px;border:1px solid #2e2e2e;font-size:15px;display:flex;align-items:center;gap:10px;color:#cfcfcf}
+#chip i{width:8px;height:8px;border-radius:4px;background:#fff;display:block}
+#pdf{position:absolute;left:40px;top:34px;width:460px;height:620px;border-radius:6px;background:#f4f4f2;overflow:hidden}
+#pdf .ln{position:absolute;left:40px;height:8px;border-radius:4px;background:#c9c9c6}
+#pdf .h{position:absolute;left:40px;font-family:'Geist';font-weight:700;font-size:20px;color:#111}
+#tbl{position:absolute;left:40px;top:300px;width:380px;border-top:2px solid #111;border-bottom:2px solid #111;font-size:13px;color:#111}
+#tbl .r{display:flex;height:30px;align-items:center;border-top:1px solid #d0d0cc}
+#tbl .r span{flex:1;padding-left:8px}
+#tbl .r:first-child{border-top:none;font-weight:700}
+
+#dayc{left:110px;top:800px;font-size:150px;font-weight:600;letter-spacing:-4px;white-space:nowrap}
+#dayl{left:118px;top:970px;font-size:22px;color:#9a9a9a;letter-spacing:2px;white-space:nowrap}
+#note{left:660px;top:70px;width:600px;height:96px;border-radius:26px;padding:0 24px;display:flex;align-items:center;gap:16px;
+  background:rgba(22,22,22,.62);backdrop-filter:blur(26px) saturate(140%);border:1px solid rgba(255,255,255,.16);box-shadow:0 30px 70px rgba(0,0,0,.6)}
+#note .ic{width:52px;height:52px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+#note .h{font-size:15px;color:#9a9a9a}#note .b{font-size:21px;color:#fff;margin-top:3px;white-space:nowrap}
+#wake{left:0;top:250px;width:1920px;text-align:center;font-size:460px;font-weight:800;letter-spacing:-22px;line-height:460px}
+#wakel{left:0;top:720px;width:1920px;text-align:center;font-size:26px;color:#bdbdbd;letter-spacing:6px}
+
+#word{left:0;top:0;width:1920px;height:1080px;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:-.045em;white-space:nowrap;text-shadow:0 10px 80px rgba(0,0,0,.8)}
+#cap{left:120px;top:830px;font-size:120px;font-weight:650;letter-spacing:-4px;white-space:nowrap;text-shadow:0 8px 60px rgba(0,0,0,.9)}
+#cblk{left:0;top:0;width:34px;height:64px;background:#fff;box-shadow:0 0 40px rgba(255,255,255,.6)}
+#logo{left:0;top:0;width:1920px;height:1080px}
+#sail{position:absolute;height:170px}
+#wm{position:absolute;font-size:170px;font-weight:600;letter-spacing:-7px;line-height:170px;white-space:nowrap}
+#tagl{position:absolute;left:0;width:1920px;top:676px;text-align:center;font-size:30px;color:#a0a0a0;white-space:nowrap}
+</style>
+</head>
+<body>
+<canvas id="bg" class="layer" width="1920" height="1080"></canvas>
+<div id="ui">
+  <div id="line1" class="abs mono"><span class="p">›</span><span id="l1t"></span><span class="blk" id="l1c"></span></div>
+  <div id="err" class="abs mono"><b>✕</b> session not found · workspace was deleted</div>
+  <div id="pill" class="abs mono"><span class="p">$</span><span id="pt"></span><span class="blk" id="pc"></span></div>
+  <div id="term" class="abs">
+    <div class="bar"><div class="d" style="left:20px"></div><div class="d" style="left:40px"></div><div class="d" style="left:60px"></div>
+      <div id="ttl" class="mono">atlas — maritime</div><div id="stat" class="mono"><i id="stati"></i><span id="statt">running</span></div></div>
+    <div id="log" class="mono"></div>
+    <div id="pane">
+      <div id="cnt">0.00s</div><div id="cntl" class="mono">COLD BOOT</div>
+      <div id="spec" class="mono">Firecracker micro-VM · own kernel
+bare metal · deps preloaded
+persistent /data</div>
+      <div id="tree" class="mono"></div>
+      <canvas id="chart" width="920" height="400"></canvas>
+      <div id="chip" class="mono"><i></i><span id="chipt">chromium · signed in as atlas@lab</span></div>
+      <div id="pdf">
+        <div class="h" style="top:34px">Sparse Routing for Long-Context Agents</div>
+        <div class="ln" style="top:78px;width:300px"></div><div class="ln" style="top:100px;width:360px"></div><div class="ln" style="top:122px;width:340px"></div>
+        <div class="ln" style="top:144px;width:370px"></div><div class="ln" style="top:166px;width:250px"></div>
+        <div class="h" style="top:220px;font-size:17px">4 &nbsp;Ablations</div>
+        <div class="ln" style="top:258px;width:350px"></div>
+        <div id="tbl"></div>
+        <div class="ln" style="top:500px;width:360px"></div><div class="ln" style="top:522px;width:320px"></div><div class="ln" style="top:544px;width:200px"></div>
+      </div>
+    </div>
+  </div>
+  <div id="dayc" class="abs mono">DAY 1</div>
+  <div id="dayl" class="abs mono">atlas · asleep 0d 00h · state on /data</div>
+  <div id="note" class="abs"><div class="ic"><svg width="26" height="26" viewBox="0 0 24 24"><path d="M21.5 3.2 2.9 10.4c-1 .4-1 1.1-.2 1.4l4.7 1.5 1.8 5.6c.2.6.4.8.9.8.4 0 .6-.2.9-.5l2.4-2.3 4.8 3.6c.9.5 1.5.2 1.7-.8l3.1-14.7c.3-1.2-.4-1.7-1.5-1.2Z" fill="#111"/></svg></div>
+    <div><div class="h">Telegram · you → atlas · now</div><div class="b">add the ablation table to section 4</div></div></div>
+</div>
+<canvas id="top" class="layer" width="1920" height="1080"></canvas>
+<div id="fx">
+  <div id="word" class="abs"></div>
+  <div id="cap" class="abs"></div>
+  <div id="wake" class="abs">0.6s</div>
+  <div id="wakel" class="abs mono">WOKE FROM SLEEP · MID-TASK</div>
+  <div id="cblk" class="abs"></div>
+  <div id="logo" class="abs"><img id="sail" src="assets/sail.png"><div id="wm">maritime</div><div id="tagl" class="mono"><span id="tagt"></span><span class="blk" id="tagc"></span></div></div>
+</div>
+<canvas id="grain" class="layer" width="1920" height="1080"></canvas>
+
+<script src="../lib/core.js"></script>
+<script>
+const {W,H,E,clamp,lerp,P,S,kf,hash,grid,img,Seq,rr,cover,halftone,grain,$,css,show,px,fontsReady} = K;
+const G = grid(0.036, 0.5);
+const m = (bar, bt=1, sub=0) => G.b(bar, bt, sub, 4);          // sub = 16ths
+const seq = { ocean: new Seq('seq/mt_ocean', 298), sky: new Seq('seq/mt_sky', 331), bow: new Seq('seq/mt_bow', 351) };
+const bg = $('bg').getContext('2d'), tp = $('top').getContext('2d'), gr = $('grain').getContext('2d');
+
+// ---------- script ----------
+const CMD1 = 'agent.resume("atlas")', CMD2 = 'maritime deploy atlas';
+const typed = (s, t, t0, step=0.0625) => s.slice(0, clamp(Math.floor((t - t0) / step) + 1, 0, s.length) * (t >= t0 ? 1 : 0));
+const blink = (t, on=true) => on && (Math.floor((t - 0.036) / 0.25) % 2 === 0);
+
+const LOG = [
+  [6.286, 'hi', '▲ firecracker micro-VM ............ provisioned'],
+  [6.536, 'hi', '▲ kernel 6.1 · 2 vCPU · 4 GB · bare metal ... ok'],
+  [6.786, 'hi', '▲ /data  persistent disk · 20 GB ....... mounted'],
+  [7.036, 'hi', '▲ python 3.12 · node 22 · chromium ..... ready'],
+  [7.286, 'hi', '▲ https://atlas.maritime.sh ............ live'],
+  [7.536, 'ok', '✓ atlas is running'],
+  [8.036, '',   'atlas › apt-get install -y texlive-latex-base'],
+  [8.286, 'dyn-apt', ''],
+  [8.786, '',   'atlas › python train.py --epochs 40 --gpu'],
+  [9.036, 'dyn-ep', ''],
+  [10.036,'',   'atlas › saved /data/checkpoints/epoch_06.pt'],
+  [10.536,'',   'atlas › writing /data/paper/main.tex'],
+  [11.036,'',   'atlas › chromium · arxiv.org · signed in'],
+  [11.536,'',   'atlas › epoch 12 done · checkpoint saved'],
+  [12.036,'dim','you   › ^D   logging off for the week'],
+  [12.536,'hi', 'atlas › going to sleep · state saved to /data (1.2 GB)'],
+  [13.036,'dim','○ atlas is sleeping'],
+  [23.286,'ok', '▲ woke in 0.6s · asleep 7d 04h 12m'],
+  [23.536,'hi', '▲ /data intact · chromium session restored'],
+  [23.786,'dim','you   › add the ablation table to section 4'],
+  [24.036,'',   'atlas › resuming at step 48,112'],
+  [24.286,'',   'atlas › + \\section{Ablations} → paper/main.tex'],
+  [25.536,'ok', '✓ paper.pdf rebuilt · 14 pages'],
+];
+function logHTML(t) {
+  const rows = [];
+  for (const [at, cls, txt] of LOG) {
+    if (t < at) continue;
+    let s = txt;
+    if (cls === 'dyn-apt') { const p = P(t, 8.286, 8.75, E.outCubic); const n = Math.round(p*24); s = '  ' + '█'.repeat(n) + '░'.repeat(24-n) + `  ${String(Math.round(p*100)).padStart(3)}%`; }
+    if (cls === 'dyn-ep') { const e = Math.min(12, 1 + Math.floor((t - 9.036) / 0.25)); const loss = 0.912 - (0.912-0.418)*(1-Math.pow(1-(e-1)/11, 1.6));
+      const n = Math.round(e/40*24); s = `  epoch ${String(e).padStart(2,'0')}/40  loss ${loss.toFixed(3)}  ▕${'█'.repeat(n)}${'░'.repeat(24-n)}▏`; }
+    const a = P(t, at, at+0.08);
+    rows.push(`<div class="${cls.startsWith('dyn')?'':cls}" style="opacity:${a.toFixed(2)}">${s.replace(/</g,'&lt;')}</div>`);
+  }
+  const keep = rows.slice(-19);
+  if (t < 26.2 && (t < 13.3 || t > 23.1)) keep.push(`<div><span class="dim">atlas › </span><span class="blk" style="opacity:${blink(t)?1:0}"></span></div>`);
+  return keep.join('');
+}
+const TREE = [[8.786,'/data'],[9.036,'├─ checkpoints/'],[9.536,'│   ├─ epoch_02.pt'],[10.036,'│   └─ epoch_06.pt'],[10.536,'├─ paper/'],[10.786,'│   ├─ main.tex'],[11.036,'│   └─ figures/loss.png'],[11.286,'└─ runs/2026-09-21/']];
+const TBL = [['Variant','Recall','Latency'],['full model','0.912','41 ms'],['– sparse routing','0.874','63 ms'],['– memory cache','0.851','44 ms'],['– both','0.803','71 ms']];
+
+// ---------- particles for the logo ----------
+let PARTS = null;
+async function buildParticles() {
+  const im = await seq.bow.at((29.536 - 26.25) * 1.0);
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  x.fillStyle = '#000'; x.fillRect(0,0,W,H);
+  const hz = bowZoom(29.536);
+  const hd = halftone(x, im, 0, 0, W, H, {cell: 10, gain: 1.05, gamma: 1.0, zoom: hz, fy: 0.55});
+  const src = [];
+  for (let j=0;j<hd.rows;j++) for (let i=0;i<hd.cols;i++) { const k=(j*hd.cols+i)*4; const L=(0.2126*hd.data[k]+0.7152*hd.data[k+1]+0.0722*hd.data[k+2])/255;
+    const Lg = clamp(Math.pow(clamp(L*1.05),1.0)); if (Lg < 0.06) continue; src.push([i*10, j*10, 10*0.56*Math.sqrt(Lg)]); }
+  // logo mask targets
+  const lc = document.createElement('canvas'); lc.width = W; lc.height = H; const lx = lc.getContext('2d');
+  const L = logoLayout(); lx.drawImage($('sail'), L.sx, L.sy, L.sw, L.sh);
+  lx.fillStyle = '#fff'; lx.font = "600 170px Geist"; lx.textBaseline = 'top'; lx.letterSpacing = '-7px'; lx.fillText('maritime', L.wx, L.wy + 8);
+  const md = lx.getImageData(0,0,W,H).data, tg = [];
+  for (let y=0;y<H;y+=5) for (let xx=(y/5)%2?2:0;xx<W;xx+=5) if (md[(y*W+xx)*4+3] > 140) tg.push([xx,y]);
+  const N = Math.min(3200, src.length);
+  const pick = []; for (let i=0;i<N;i++) pick.push(src[Math.floor(i*src.length/N)]);
+  // assign targets by sorted angle-ish order for tidy flow
+  pick.sort((a,b)=>a[0]-b[0]); const tgs = tg.slice().sort((a,b)=>a[0]-b[0]);
+  PARTS = pick.map((p,i)=>({x0:p[0], y0:p[1], r0:p[2], tx: tgs[Math.floor(i*tgs.length/N)][0], ty: tgs[Math.floor(i*tgs.length/N)][1], h: hash(i,3), h2: hash(i,9)}));
+}
+function logoLayout() {
+  const sh = 170, sw = 1158/1559*sh, gap = 42, ww = window.WMW || 700;
+  const total = sw + gap + ww, sx = 960 - total/2, sy = 380;
+  return {sx, sy, sw, sh, wx: sx + sw + gap, wy: sy + 4};
+}
+const bowZoom = t => kf(t, [[26.25,1.16],[29.9,1.02,E.outCubic]]);
+
+// ---------- fleet (tiles become the halftone ocean) ----------
+const _fl = document.createElement('canvas'); _fl.width = 161; _fl.height = 91; const _flx = _fl.getContext('2d', {willReadFrequently:true});
+function fleet(ctx, im, t, reveal) {
+  const c = Math.exp(lerp(Math.log(132), Math.log(12), P(t, 14.5, 15.95, E.inOutCubic)));
+  _flx.fillStyle='#000'; _flx.fillRect(0,0,161,91);
+  const iw = im.naturalWidth, ih = im.naturalHeight, s = Math.max(161/iw, 91/ih);
+  _flx.drawImage(im, (161-iw*s)/2, (91-ih*s)/2, iw*s, ih*s);
+  const d = _flx.getImageData(0,0,161,91).data;
+  const q = clamp((c - 12) / (46 - 12));                        // 1 = tiles, 0 = dots
+  const ni = Math.ceil(960 / c) + 1, nj = Math.ceil(540 / c) + 1;
+  ctx.save();
+  const R = reveal;                                             // tiles revealed within radius R (tile units)
+  for (let j=-nj;j<=nj;j++) for (let i=-ni;i<=ni;i++) {
+    const dist = Math.hypot(i, j*1.6); const a = clamp((R - dist) / 2.5); if (a <= 0) continue;
+    if (i === 0 && j === 0 && t < 14.62) continue;
+    const u = clamp(80 + i, 0, 160), v = clamp(45 + j, 0, 90); const k = (v*161+u)*4;
+    let L = (0.2126*d[k]+0.7152*d[k+1]+0.0722*d[k+2])/255; L = clamp(Math.pow(clamp(L*1.45), 1.4));
+    const cx = 960 + i*c, cy = 540 + j*c;
+    const tw = lerp(c*0.56*2*Math.sqrt(L), c*0.86, q), th = lerp(c*0.56*2*Math.sqrt(L), c*0.46, q);
+    if (tw < 0.6) continue;
+    const g = Math.round(lerp(255, 18 + 34*L, q));
+    ctx.globalAlpha = a * lerp(1, 1, q);
+    ctx.fillStyle = `rgb(${g},${g},${g})`;
+    const rad = lerp(Math.min(tw,th)/2, c*0.07, q);
+    if (q > 0.02) { rr(ctx, cx - tw/2, cy - th/2, tw, th, rad); ctx.fill(); if (q > 0.5) { ctx.strokeStyle = `rgba(80,80,80,${(q-0.5)*2*0.8})`; ctx.lineWidth = 1; ctx.stroke(); } }
+    else { ctx.beginPath(); ctx.arc(cx, cy, tw/2, 0, 7); ctx.fill(); }
+    if (q > 0.35) {                                            // status light + label
+      const on = L > 0.42 || (i === 0 && j === 0 && false);
+      ctx.globalAlpha = a * (q - 0.35) / 0.65;
+      ctx.fillStyle = on ? '#fff' : '#3c3c3c'; ctx.beginPath(); ctx.arc(cx + tw/2 - c*0.09, cy - th/2 + c*0.09, Math.max(1.2, c*0.035), 0, 7); ctx.fill();
+      if (c > 70) { ctx.fillStyle = '#6a6a6a'; ctx.font = `${Math.round(c*0.085)}px 'Geist Mono'`;
+        ctx.fillText('u_' + Math.floor(hash(i*131+j*7,1)*0xfffff).toString(36).padStart(4,'0'), cx - tw/2 + c*0.07, cy + th/2 - c*0.07); }
+    }
+  }
+  ctx.restore();
+  // the atlas tile itself
+  const tw = c*0.86, th = c*0.46;
+  ctx.save(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; rr(ctx, 960-tw/2-4, 540-th/2-4, tw+8, th+8, c*0.09); ctx.stroke(); ctx.restore();
+  return c;
+}
+function marker(ctx, t, label, alpha=1) {
+  ctx.save(); ctx.globalAlpha = alpha;
+  const ph = ((t - 0.036) / 1.0) % 1;
+  ctx.strokeStyle = `rgba(255,255,255,${0.7*(1-ph)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(960,540,14+30*ph,0,7); ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(960,540,6,0,7); ctx.fill();
+  ctx.font = "500 20px 'Geist Mono'"; const tw = ctx.measureText(label).width;
+  ctx.fillStyle = 'rgba(10,10,10,.75)'; rr(ctx, 988, 522, tw+32, 36, 18); ctx.fill(); ctx.strokeStyle='#333'; ctx.lineWidth=1; ctx.stroke();
+  ctx.fillStyle = '#e6e6e6'; ctx.fillText(label, 1004, 546); ctx.restore();
+}
+
+// ---------- boot ----------
+window.boot = async () => {
+  await fontsReady(["400 20px 'Geist Mono'","500 20px 'Geist Mono'","600 20px Geist","700 20px Geist","800 20px Geist","650 20px Geist"]);
+  window.WMW = (() => { const c = document.createElement('canvas').getContext('2d'); c.font = "600 170px Geist"; c.letterSpacing='-7px'; return c.measureText('maritime').width; })();
+  await new Promise(r => { const s = $('sail'); if (s.complete) r(); else s.onload = r; });
+  $('tbl').innerHTML = TBL.map((r,i)=>`<div class="r" id="tr${i}">${r.map(c=>`<span>${c}</span>`).join('')}</div>`).join('');
+  await buildParticles();
+};
+async function countFrames(dir) {                                   // binary search the sequence length
+  let lo = 1, hi = 2000;
+  const ok = async i => { try { await img(`${dir}/${String(i).padStart(4,'0')}.jpg`); return true; } catch { return false; } };
+  while (lo < hi) { const mid = Math.ceil((lo + hi) / 2); if (await ok(mid)) lo = mid; else hi = mid - 1; }
+  return lo;
+}
+
+// ---------- seek ----------
+window.seek = async (t) => {
+  bg.fillStyle = '#000'; bg.fillRect(0,0,W,H); tp.clearRect(0,0,W,H);
+  const ocean = await seq.ocean.at(t * 0.55, 'pingpong');
+
+  // ===== cold open =====
+  const W1 = m(2,2), W2 = m(2,3), W3 = m(2,4), GAP1 = m(2,4,3);
+  if (t < W1) halftone(bg, ocean, 0, 0, W, H, {cell: 16, gamma: 1.4, minDot: 0.1, gain: 1.45, alpha: 0.16 + 0.06*Math.sin(t*2), zoom: kf(t,[[0,1.12],[2.5,1.04,E.lin]])});
+  const words = [[W1,'It',430,1.25,0.35,15],[W2,'forgot',330,1.0,0.6,11],[W3,'everything.',250,1.4,0.45,8]];
+  let wtxt = '', wsize = 0;
+  for (const [at, txt, size, z, fyy, cell] of words) if (t >= at && t < GAP1 && (t < at + 0.5)) {
+    const k = t - at; halftone(bg, ocean, 0, 0, W, H, {cell, gain: 1.55, gamma: 1.4, minDot: 0.1, zoom: z + 0.08*k, fy: fyy, fx: 0.5 + 0.1*Math.sin(at)});
+    wtxt = txt; wsize = size;
+  }
+  const wd = $('word');
+  // ===== cold-open line + error =====
+  const l1 = $('line1'); show(l1, t < W1);
+  $('l1t').textContent = typed(CMD1, t, m(1,2), 0.0625);
+  $('l1c').style.opacity = (t < m(1,2) ? blink(t) : (t > 1.85 ? blink(t) : 1)) ? 1 : 0;
+  const er = $('err'); show(er, t >= m(2) && t < W1);
+  const jit = t < m(2) + 0.14 ? (hash(Math.floor(t*60),5) - 0.5) * 26 : 0;
+  css(er, {transform: `translateX(${px(jit)})`, opacity: t < m(2)+0.05 ? 0.6 : 1});
+  css(l1, {transform: `translateX(${px(t >= m(2) && t < m(2)+0.14 ? -jit*0.5 : 0)})`});
+
+  // ===== pill: the cursor stretches into a command bar =====
+  const pl = $('pill'); const pOn = t >= m(3) && t < m(4) + 0.04; show(pl, pOn);
+  if (pOn) {
+    const pw = kf(t, [[m(3),36],[m(3)+0.36,1000,E.outExpo]]), ph = kf(t, [[m(3),70],[m(3)+0.2,96,E.outBack]]);
+    const push = 1 + 0.12*P(t, m(3), m(4), E.inQuad), sh = 5*P(t, m(3,4), m(4))*Math.sin(t*93);
+    css(pl, {left:px(960-pw/2), top:px(540-ph/2), width:px(pw), height:px(ph), borderRadius:px(ph/2),
+      transform:`translate(${px(sh)},${px(sh*0.6)}) scale(${push.toFixed(4)})`,
+      background: t >= m(3,4,3) ? '#f4f4f4' : '#0c0c0c',
+      color: t >= m(3,4,3) && t < m(4) ? '#000' : '#f2f2f2', padding: `0 ${px(Math.min(40, pw/2 - 12))}`});
+    $('pt').textContent = ' ' + typed(CMD2, t, m(3,1,1)+0.125, 0.0625);
+    $('pc').style.opacity = (t < m(3,1,1)+0.125 || t > 5.6) ? (blink(t)?1:0) : 1;
+    $('pc').style.background = t >= m(3,4,3) && t < m(4) ? '#000' : '#f2f2f2';
+    halftone(bg, ocean, 0, 0, W, H, {cell: 13, gamma: 1.4, minDot: 0.1, gain: 1.45, alpha: 0.2 + 0.25*P(t,m(3),m(4)), zoom: 1.0 + 0.5*P(t,m(3),m(4),E.inCubic)});
+  }
+
+  // ===== terminal: boot, work, sleep; later restored =====
+  const TON = (t >= m(4) && t < 14.6) || (t >= m(12,3) && t < m(14)+0.3);
+  const tm = $('term'); show(tm, TON);
+  if (TON) {
+    if (t < 14.6 || t >= m(12,3)) halftone(bg, ocean, 0, 0, W, H, {cell: 18, gamma: 1.4, minDot: 0.1, gain: 1.45, alpha: 0.14, zoom: 1.2});
+    let sx, sy, sc;
+    if (t < m(4) + 0.7) {                                   // grows out of the pill
+      const g = E.spring(t - m(4), 13, 0.62);
+      const w = lerp(1120, 1560, g), h = lerp(108, 820, g);
+      sc = w / 1560; sx = 960 - w/2; sy = 540 - h/2;
+      css(tm, {height: px(h/sc), borderRadius: px(lerp(54, 20, clamp(g))/sc)});
+    } else { css(tm, {height:'820px', borderRadius:'20px'}); sc = 1; sx = 180; sy = 130; }
+    // gentle camera drift while it works
+    const drift = 1;
+    if (t >= 8.036 && t < m(8)) {
+      const CAM = [[8.036,1.0,780,410],[9.1,1.42,430,300,E.inOutCubic],[10.3,1.42,470,330],[11.1,1.5,1260,470,E.inOutCubic],[11.9,1.5,1250,500],[12.7,1.3,480,560,E.inOutCubic],[13.3,1.3,480,580],[m(8),1.0,780,410,E.inOutCubic]];
+      const z = kf(t, CAM.map(k=>[k[0],k[1],k[4]])), fx = kf(t, CAM.map(k=>[k[0],k[2],k[4]])), fy = kf(t, CAM.map(k=>[k[0],k[3],k[4]]));
+      sc = z; sx = 960 - fx*z; sy = 540 - fy*z;
+    }
+    // shrink into the atlas tile
+    if (t >= m(8) && t < 14.6) { const k = P(t, m(8), m(8)+0.5, E.inOutCubic); const st = 113.5/1560;
+      const sc2 = Math.exp(lerp(Math.log(sc), Math.log(st), k)); sx = lerp(sx, 960 - 1560*st/2, k); sy = lerp(sy, 540 - 820*st/2, k); sc = sc2; }
+    // restore from the wake number
+    if (t >= m(12,3)) { const g = E.spring(t - m(12,3), 12, 0.7); sc = lerp(0.16, 1, g); sx = 960 - 780*sc; sy = 540 - 410*sc; }
+    // collapse into the cursor block (left edge)
+    if (t >= m(14)) { const k = P(t, m(14), m(14)+0.26, E.inCubic); sc = lerp(sc, 0.01, k); sx = lerp(sx, 110, k); sy = lerp(sy, 540, k); }
+    const dim = t >= m(7,3) && t < 14.6 ? 1 - 0.45*P(t, m(7,3), m(8)) : (t >= m(13,2) && t < m(14) ? 0.35 : 1);
+    css(tm, {transform:`translate(${px(sx)},${px(sy)}) scale(${sc.toFixed(5)})`, filter:`brightness(${dim.toFixed(3)})`});
+    $('log').innerHTML = logHTML(t);
+    const sleeping = t >= m(7,3) && t < m(12);
+    $('statt').textContent = sleeping ? 'sleeping' : 'running'; $('stati').style.background = sleeping ? '#555' : '#fff';
+    // right pane modes
+    const boot = t < 8.036, work = t >= 8.036 && t < 14.6, rest = t >= m(12,3);
+    show($('cnt'), boot); show($('cntl'), boot); show($('spec'), boot);
+    if (boot) { const p = P(t, m(4), 7.536, E.outCubic); $('cnt').textContent = (0.5*p).toFixed(2) + 's';
+      $('spec').style.opacity = P(t, 7.3, 7.6); }
+    show($('tree'), work || rest); show($('chart'), work); show($('chip'), work && t >= 11.036); show($('pdf'), rest);
+    if (work || rest) {
+      const rows = TREE.filter(r => t >= r[0] || rest).map(r => `<div class="${t < r[0] + 0.25 && !rest ? 'n' : ''}">${r[1]}</div>`);
+      $('tree').innerHTML = rows.join('');
+      css($('tree'), {top: rest ? '680px' : '34px', opacity: rest ? 0.0 : 1});
+    }
+    if (work) {
+      const cc = $('chart').getContext('2d'); cc.clearRect(0,0,920,400);
+      cc.strokeStyle = '#2a2a2a'; cc.lineWidth = 1; for (let i=0;i<5;i++){ cc.beginPath(); cc.moveTo(0,20+i*90); cc.lineTo(920,20+i*90); cc.stroke(); }
+      const pr = P(t, 9.036, 11.8, E.lin); cc.strokeStyle = '#fff'; cc.lineWidth = 4; cc.beginPath();
+      for (let i=0;i<=200*pr;i++){ const u=i/200; const y = 40 + 320*(1-Math.exp(-u*3.2))*0.92 + 10*Math.sin(u*40)*(1-u); const x = u*900; i?cc.lineTo(x, 380 - y + 20):cc.moveTo(x,380-y+20); }
+      cc.stroke(); cc.fillStyle='#8a8a8a'; cc.font="24px 'Geist Mono'"; cc.fillText('loss', 4, 36);
+    }
+    if (rest) { for (let i=0;i<TBL.length;i++){ const a = i===0 ? P(t,23.8,24.0) : P(t, 24.286 + i*0.25, 24.286 + i*0.25 + 0.15); $('tr'+i).style.opacity = a; } }
+  }
+
+  // ===== fleet: tiles pull back and become the ocean =====
+  if (t >= m(8) + 0.4 && t < m(9) + 0.5) {
+    const R = t < 14.6 ? 0.8 : 1 + 110*E.inCubic(P(t, 14.6, 15.8, E.lin));
+    let c = 12;
+    if (t < m(9)) c = fleet(tp, ocean, t, R);
+    else {                                                  // scan line: ocean dots below, sky above
+      const sky = await seq.sky.at(t - m(9));
+      const ys = lerp(0, H, P(t, m(9), m(9)+0.5, E.inOutCubic));
+      tp.save(); tp.beginPath(); tp.rect(0, ys, W, H-ys); tp.clip(); halftone(tp, ocean, 0, 0, W, H, {cell: 12, gain: 1.45, gamma: 1.4, minDot: 0.1}); tp.restore();
+      tp.save(); tp.beginPath(); tp.rect(0, 0, W, ys); tp.clip(); halftone(tp, sky, 0, 0, W, H, {cell: 12, gain: 2.8, gamma: 1.1, minDot: 0.1, zoom: 1.4, fy: 0.12}); tp.restore();
+      tp.fillStyle = '#fff'; tp.fillRect(0, ys-1, W, 2);
+    }
+    if (t >= 15.3) marker(tp, t, 'atlas · sleeping', P(t, 15.3, 15.6));
+  }
+  const cap = $('cap'); const CAPS = [[m(8,2),'Every user.'],[m(8,3),'Their own VM.'],[m(8,4),'Forever.']];
+  let capTxt = ''; for (const [at, s] of CAPS) if (t >= at) capTxt = s;
+  const capOn = (t >= m(8,2) && t < m(9)); show(cap, capOn);
+  if (capOn) { cap.textContent = capTxt; const last = CAPS.filter(c=>t>=c[0]).pop()[0]; const a = P(t, last, last+0.12, E.outCubic);
+    css(cap, {transform:`translateY(${px(18*(1-a))})`, opacity: 0.4 + 0.6*a}); }
+
+  // ===== time passes =====
+  const dc = $('dayc'), dl = $('dayl'); const tOn = t >= m(9) && t < m(12); show(dc, tOn); show(dl, tOn);
+  if (t >= m(9) + 0.5 && t < m(12)) {
+    const sky = await seq.sky.at(t - m(9));
+    const ph = ((t - m(9)) / 0.5) % 1, dayg = 1.5 + 1.3*Math.exp(-ph*5);
+    halftone(tp, sky, 0, 0, W, H, {cell: 12, gain: dayg, gamma: 1.1, minDot: 0.1, zoom: 1.4 + 0.1*P(t, m(9), m(12), E.lin), fy: 0.12});
+    marker(tp, t, 'atlas · sleeping');
+  }
+  if (tOn) {
+    const day = clamp(1 + Math.floor((t - m(9)) / 0.5), 1, 8);
+    dc.textContent = `DAY ${day}`;
+    const hrs = Math.min(7*24 + 4, Math.floor((t - m(9)) / 3.5 * 7 * 24 + 0.5));
+    dl.textContent = `atlas · asleep ${Math.floor(hrs/24)}d ${String(hrs%24).padStart(2,'0')}h · state on /data`;
+    const kk = t - (m(9) + (day-1)*0.5); dc.style.transform = `translateY(${px(-14*Math.exp(-kk*14))})`;
+  }
+  const nt = $('note'); const nOn = t >= m(11) && t < m(12); show(nt, nOn);
+  if (nOn) { const a = E.spring(t - m(11), 13, 0.62); css(nt, {transform:`translateY(${px(-180*(1-a))})`}); }
+  // silence: black, one dot
+  if (t >= m(12) && t < m(12,2)) { tp.fillStyle = '#000'; tp.fillRect(0,0,W,H); tp.fillStyle = '#fff'; tp.beginPath(); tp.arc(960,540,6,0,7); tp.fill(); }
+
+  // ===== wake =====
+  const wk = $('wake'), wl = $('wakel'); const wOn = t >= m(12,2) && t < m(12,3) + 0.3; show(wk, wOn); show(wl, wOn && t < m(12,3));
+  if (wOn) {
+    const a = P(t, m(12,2), m(12,2)+0.2, E.outExpo), s = P(t, m(12,3), m(12,3)+0.16, E.inCubic);
+    css(wk, {transform:`scale(${(lerp(1.3,1,a)*lerp(1,0.14,s)).toFixed(4)})`, opacity: 1 - s, filter:`blur(${((1-a)*12 + s*6).toFixed(1)}px)`});
+    const fl = 1 - P(t, m(12,2), m(12,2)+0.3, E.outCubic); if (fl > 0) { tp.fillStyle = `rgba(255,255,255,${0.85*fl})`; tp.fillRect(0,0,W,H); }
+  }
+  // "Same disk." words over the restored terminal
+  const SAME = [[m(13,2),'Same disk.'],[m(13,3),'Same session.'],[m(13,4)-0.001,'Same agent.']];
+  for (const [at, s] of SAME) if (t >= at && t < at + 0.5 && t < m(13,4) + 0.5) { wtxt = s; wsize = 230; }
+  if (t >= m(13,4) && t < m(14)) { wtxt = 'Same agent.'; wsize = 230; }
+
+  // ===== collapse to the cursor, zip, bow =====
+  const cb = $('cblk'); const zipOn = t >= m(14) && t < m(14) + 0.62; show(cb, zipOn);
+  let zx = -100;
+  if (zipOn) {
+    zx = t < m(14)+0.26 ? 110 : lerp(110, 2000, P(t, m(14)+0.26, m(14)+0.6, E.inQuad));
+    const stretch = t >= m(14)+0.26 ? 1 + 6*Math.sin(P(t, m(14)+0.26, m(14)+0.6)*Math.PI) : 1;
+    css(cb, {left:px(zx - 17*stretch), top:px(508), width:px(34*stretch), opacity: 1});
+  }
+  if (t >= m(14) + 0.26 && t < m(15,4) + 0.001) {
+    const bow = await seq.bow.at(t - 26.25);
+    tp.save(); if (zipOn) { tp.beginPath(); tp.rect(0,0,Math.max(0,zx-17),H); tp.clip(); }
+    halftone(tp, bow, 0, 0, W, H, {cell: 10, gain: 1.05, gamma: 1.0, zoom: bowZoom(t), fy: 0.55}); tp.restore();
+  }
+
+  // ===== scatter + converge into the logo =====
+  const lg = $('logo');
+  if (t >= m(15,4) && PARTS) {
+    const sc = P(t, m(15,4), m(16), E.outCubic), cv = P(t, m(16), m(16)+0.52, E.inOutCubic), fin = P(t, m(16)+0.42, m(16)+0.72, E.outCubic);
+    tp.fillStyle = '#fff'; tp.beginPath();
+    for (const p of PARTS) {
+      const ang = p.h * Math.PI * 2, spd = 40 + 160*p.h2;
+      const x1 = p.x0 + Math.cos(ang)*spd*sc + (p.x0-960)*0.08*sc, y1 = p.y0 + Math.sin(ang)*spd*sc*0.7 - 40*sc*p.h2;
+      const x = lerp(x1, p.tx, cv), y = lerp(y1, p.ty, cv);
+      const r = lerp(lerp(p.r0, p.r0*0.8, sc), 2.3, cv) * (1 - fin);
+      if (r < 0.2) continue; tp.moveTo(x + r, y); tp.arc(x, y, r, 0, 7);
+    }
+    tp.fill();
+  }
+  show(lg, t >= m(16) + 0.42);
+  if (t >= m(16) + 0.42) {
+    const L = logoLayout(); const a = P(t, m(16)+0.42, m(16)+0.72, E.outCubic);
+    css($('sail'), {left:px(L.sx), top:px(L.sy), height:px(L.sh), opacity:a});
+    css($('wm'), {left:px(L.wx), top:px(L.wy), opacity:a});
+    const tg = '$1/month per agent · maritime.sh';
+    $('tagt').textContent = typed(tg, t, m(16,2,1), 0.03125);
+    $('tagc').style.opacity = blink(t) || t < 31.7 ? 1 : 0;
+    $('tagl').style.opacity = t >= m(16,2,1) ? 1 : 0;
+  }
+
+  for (const [at, txt, size] of [[m(15),'It',430],[m(15,2),'never',360],[m(15,3),'left.',400]]) if (t >= at && t < at + 0.5) { wtxt = txt; wsize = size; }
+  // kinetic word
+  show(wd, !!wtxt);
+  if (wtxt) { wd.textContent = wtxt; wd.style.fontSize = wsize + 'px'; }
+
+  gr.clearRect(0,0,W,H); grain(gr, t, 1, 'source-over');
+};
+</script>
+</body>
+</html>

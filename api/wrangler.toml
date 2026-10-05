@@ -1,0 +1,28 @@
+name = "video-automation-api"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+
+[[r2_buckets]]
+binding = "VIDEOS"
+bucket_name = "video-automation"
+
+# Producer only. The Google VM consumes over the Queues HTTP pull API.
+[[queues.producers]]
+binding = "JOBS"
+queue = "video-jobs"
+
+# The render VM: started on demand by the API, powers itself off when idle (deploy/startup.sh)
+[vars]
+GCP_PROJECT = "doctosheet-be"
+GCP_ZONE = "us-east4-a"
+GCP_VM = "video-worker"
+
+[[kv_namespaces]]
+binding = "STATE"            # "pending" flag: set when a job is queued, cleared once none are left
+id = "7c33f092418249cf9d442e96e7dfe27b"
+
+[triggers]
+crons = ["* * * * *"]      # pending flag set → make sure the VM is up; reads Neon only while work is pending
+
+# Database: Neon Postgres (project gentle-cell-80493280), migrations via `npm run migrate`.
+# Secrets (npm run secrets): ADMIN_KEY, INTERNAL_KEY, DATABASE_URL, GCP_SA_KEY

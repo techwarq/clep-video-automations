@@ -1,0 +1,78 @@
+{
+ "mode": "composition_plan",
+ "plan": {
+  "positive_global_styles": [
+   "warm confident indie electronic",
+   "100 BPM",
+   "4/4",
+   "felt piano",
+   "clean electric guitar plucks",
+   "warm analog bass",
+   "tight live-feel drums",
+   "optimistic, grounded, cinematic",
+   "instrumental"
+  ],
+  "negative_global_styles": [
+   "vocals",
+   "EDM drops",
+   "dubstep",
+   "lo-fi hiss",
+   "orchestral"
+  ],
+  "sections": [
+   {
+    "section_name": "Intro tension",
+    "positive_local_styles": [
+     "sparse felt piano",
+     "soft ticking hi-hat",
+     "low anticipation pulse",
+     "quiet"
+    ],
+    "negative_local_styles": [
+     "kick drum"
+    ],
+    "duration_ms": 4800,
+    "lines": []
+   },
+   {
+    "section_name": "Groove",
+    "positive_local_styles": [
+     "full band enters on the downbeat",
+     "driving kick and snare",
+     "bass groove",
+     "guitar plucks",
+     "forward momentum"
+    ],
+    "negative_local_styles": [],
+    "duration_ms": 16800,
+    "lines": []
+   },
+   {
+    "section_name": "Lift",
+    "positive_local_styles": [
+     "biggest section",
+     "wide warm pads",
+     "anthemic",
+     "open hi-hats",
+     "euphoric but tasteful"
+    ],
+    "negative_local_styles": [],
+    "duration_ms": 7200,
+    "lines": []
+   },
+   {
+    "section_name": "Outro",
+    "positive_local_styles": [
+     "drums stop",
+     "one sustained resolving piano chord",
+     "ringing tail"
+    ],
+    "negative_local_styles": [
+     "drums"
+    ],
+    "duration_ms": 4800,
+    "lines": []
+   }
+  ]
+ }
+}

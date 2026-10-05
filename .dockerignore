@@ -1,0 +1,12 @@
+**/venv
+**/__pycache__
+**/.env
+**/.cache
+**/node_modules
+engines/*/output
+engines/*/projects
+api
+.github
+.git
+**/.env.local
+.neon

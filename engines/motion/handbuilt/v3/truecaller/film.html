@@ -1,0 +1,344 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="assets/fonts.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#f3f6fb;font-family:Poppins,sans-serif;-webkit-font-smoothing:antialiased;color:#111}
+#bg{position:absolute;inset:0;background:radial-gradient(900px 700px at 70% 45%,rgba(10,108,255,.10),transparent 70%),radial-gradient(700px 500px at 20% 80%,rgba(25,161,75,.07),transparent 70%),#f3f6fb}
+#dots{position:absolute;inset:-40px;background-image:radial-gradient(circle,rgba(10,108,255,.16) 1.4px,transparent 1.8px);background-size:36px 36px}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+/* phone */
+#phone{position:absolute;left:490px;top:105px;width:420px;height:870px;border-radius:66px;background:#0d0f14;padding:14px;box-shadow:0 60px 120px rgba(20,40,90,.25),inset 0 0 0 2px #2a2d35}
+#scr{position:relative;width:392px;height:842px;border-radius:54px;overflow:hidden;background:linear-gradient(170deg,#c9d8ff 0%,#e7dcff 45%,#ffe3d3 100%)}
+#island{position:absolute;left:136px;top:12px;width:120px;height:34px;border-radius:17px;background:#000;z-index:5}
+#clock{position:absolute;left:0;width:392px;top:78px;text-align:center;font-size:84px;font-weight:600;letter-spacing:-2px;color:rgba(20,24,50,.88)}
+#date{position:absolute;left:0;width:392px;top:66px;text-align:center;font-size:16px;font-weight:500;color:rgba(20,24,50,.6)}
+#unread{position:absolute;left:14px;top:246px;height:28px;padding:0 12px;border-radius:14px;background:rgba(255,255,255,.55);font-size:13px;font-weight:600;color:#333;display:flex;align-items:center}
+.nt{position:absolute;left:14px;width:364px;height:84px;border-radius:22px;background:rgba(255,255,255,.78);backdrop-filter:blur(20px);padding:12px 14px;display:flex;gap:11px;box-shadow:0 4px 14px rgba(40,50,90,.08)}
+.nt .ic{width:36px;height:36px;border-radius:9px;background:#34c759;flex:none;display:flex;align-items:center;justify-content:center}
+.nt .h{display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:#222;width:280px}
+.nt .h span:last-child{color:#8a8a8f;font-weight:500}
+.nt .b{font-size:12.5px;line-height:17px;color:#333;width:280px;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* the card — one object that morphs through every use case */
+#card{position:absolute;overflow:hidden;background:#19a14b;box-shadow:0 40px 90px rgba(20,60,40,.18)}
+#chead{position:absolute;left:24px;right:24px;top:0;height:56px;display:flex;align-items:center;gap:14px;color:#fff;font-size:16px;font-weight:500}
+#chead b{font-size:22px;font-weight:800;letter-spacing:-.5px;font-style:italic}
+#panel{position:absolute;left:6px;right:6px;bottom:6px;background:#fff;overflow:hidden}
+.L{position:absolute;left:0;top:0;right:0;bottom:0}
+.who{position:absolute;left:30px;top:26px;display:flex;align-items:center;gap:16px}
+.av{width:64px;height:64px;border-radius:32px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:26px;color:#fff;flex:none}
+.nm{font-size:26px;font-weight:600;display:flex;align-items:center;gap:8px}
+.vb{font-size:14px;font-weight:600;color:#19a14b;letter-spacing:.14em;margin-top:2px}
+.msg{position:absolute;left:30px;right:30px;top:118px;font-size:21px;line-height:31px;color:#333}
+.act{position:absolute;left:0;right:0;bottom:0;height:66px;background:#eaf7ef;display:flex;align-items:center;justify-content:center;gap:10px;font-size:18px;font-weight:700;letter-spacing:.08em;color:#138a3f}
+.big{font-weight:700;letter-spacing:-1px}
+.steps{position:absolute;left:30px;right:30px;top:200px;display:flex;justify-content:space-between}
+.st{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:15px;font-weight:500;color:#999;width:170px;text-align:center}
+.st i{width:30px;height:30px;border-radius:15px;border:3px solid #d5d9e0;display:block;background:#fff}
+.st.on{color:#111}.st.on i{border-color:#19a14b;background:#19a14b url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 12l4 4 8-8" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>') center/18px no-repeat}
+.st.now i{border-color:#f56905;background:#f56905}
+.line{position:absolute;left:115px;right:115px;top:215px;height:4px;background:#e3e7ee;border-radius:2px}
+.line b{display:block;height:100%;background:#19a14b;border-radius:2px}
+.star{width:60px;height:60px}
+#sticky{position:absolute;left:0;top:0;height:46px;padding:0 20px;border-radius:23px;background:#111;color:#fff;font-size:16px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 14px 34px rgba(0,0,0,.18)}
+/* inbox */
+.row{position:absolute;left:480px;width:960px;height:112px;border-radius:22px;background:#fff;box-shadow:0 10px 30px rgba(20,40,90,.08);display:flex;align-items:center;gap:18px;padding:0 26px}
+.row .t{font-size:22px;font-weight:600;display:flex;align-items:center;gap:8px}.row .p{font-size:16px;color:#777;margin-top:2px}.row .tm{margin-left:auto;font-size:15px;color:#999}
+#ihead{position:absolute;left:480px;top:186px;font-size:30px;font-weight:700;display:flex;align-items:center;gap:12px}
+/* words */
+.w{position:absolute;white-space:nowrap;font-weight:700;letter-spacing:-3px;line-height:1.05}
+.w em{font-style:normal;color:#0a6cff}
+.lab{position:absolute;left:0;width:1920px;text-align:center;top:50px;font-size:78px;font-weight:700;letter-spacing:-2.5px}
+#counter{position:absolute;left:0;width:1920px;top:330px;text-align:center;font-size:250px;font-weight:800;letter-spacing:-10px;color:#0a6cff;font-variant-numeric:tabular-nums}
+#clab{position:absolute;left:0;width:1920px;top:640px;text-align:center;font-size:44px;font-weight:600;letter-spacing:-1px;color:#333}
+.feat{position:absolute;left:0;width:1920px;top:430px;display:flex;justify-content:center;align-items:center;gap:36px;font-size:120px;font-weight:700;letter-spacing:-4px}
+.feat svg{width:120px;height:120px;flex:none}
+#endlogo{position:absolute;left:590px;top:400px;width:740px}
+#endsub{position:absolute;left:0;width:1920px;top:510px;text-align:center;font-size:72px;font-weight:600;letter-spacing:-1.5px}
+#endurl{position:absolute;left:0;width:1920px;top:622px;text-align:center;font-size:28px;font-weight:500;color:#0a6cff}
+#Lrow{display:flex;align-items:center;gap:18px;padding:0 20px}
+#tap{position:absolute;left:0;top:0;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:27px;background:rgba(20,30,60,.22);border:2px solid rgba(255,255,255,.9);z-index:50}
+#ripple{position:absolute;left:0;top:0;border-radius:50%;border:3px solid rgba(10,108,255,.5);z-index:49}
+</style>
+</head>
+<body>
+<div id="bg"><div id="dots"></div></div>
+<div id="stage">
+  <div id="phone"><div id="scr">
+    <div id="island"></div><div id="date">Tuesday, 30 September</div><div id="clock">12:30</div>
+    <div id="unread">0 unread</div>
+    <div id="notifs"></div>
+  </div></div>
+</div>
+
+<div id="over">
+ <div id="cw" style="position:absolute;inset:0;transform-origin:960px 540px">
+  <div id="inbox" style="position:absolute;inset:0">
+    <div id="ihead"><svg width="34" height="34" viewBox="0 0 34 34"><circle cx="17" cy="17" r="17" fill="#0a6cff"/><path d="M9 11h16a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3h-7l-5 4v-4H9a3 3 0 0 1-3-3v-6a3 3 0 0 1 3-3z" fill="#fff"/></svg>Business Chat</div>
+    <div class="row" id="r0" style="top:250px"><div class="av" style="background:#6b4ce6">P</div><div><div class="t">Paytrail <svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#0a6cff"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="p">OTP copied · 482 913</div></div><div class="tm">12:30</div></div>
+    <div class="row" id="r1" style="top:376px"><div class="av" style="background:#f5a623">C</div><div><div class="t">Centro Kart <svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#0a6cff"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="p">Out for delivery · today by 7 pm</div></div><div class="tm">12:31</div></div>
+    <div class="row" id="r3" style="top:628px"><div class="av" style="background:#0aa3c2">A</div><div><div class="t">AirVista <svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#0a6cff"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="p">Checked in · Seat 14A · Gate 22</div></div><div class="tm">12:33</div></div>
+    <div class="row" id="r4" style="top:754px"><div class="av" style="background:#e5484d">E</div><div><div class="t">PowerGrid <svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#0a6cff"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="p">Paid · ₹1,284</div></div><div class="tm">12:32</div></div>
+  </div>
+
+  <div id="card">
+    <div id="chead"><b>truecaller</b><span>Business Chat · 12:30</span></div>
+    <div id="panel">
+      <div class="L" id="Lnotif" style="background:rgba(255,255,255,.78)">
+        <div style="position:absolute;left:14px;top:12px;display:flex;gap:11px"><div style="width:36px;height:36px;border-radius:9px;background:#34c759"></div>
+        <div><div style="font-size:13px;font-weight:600;color:#222;width:290px;display:flex;justify-content:space-between"><span>VM-PAYTRL</span><span style="color:#8a8a8f">now</span></div>
+        <div style="font-size:12.5px;line-height:17px;color:#333;width:290px">482913 is your OTP for login. Do not share. -PYTRL</div></div></div>
+      </div>
+      <div class="L" id="Lotp">
+        <div class="who"><div class="av" style="background:#6b4ce6">P</div><div><div class="nm">Paytrail <svg width="26" height="26" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#0a6cff"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="vb">VERIFIED BUSINESS</div></div></div>
+        <div class="msg">Your one-time password to sign in. Valid for 5 minutes.</div>
+        <div class="big" style="position:absolute;left:30px;top:162px;font-size:64px;letter-spacing:6px">482 913</div>
+        <div class="act" id="otpAct"><span id="otpLbl">COPY OTP</span></div>
+      </div>
+      <div class="L" id="Lorder">
+        <div class="who"><div class="av" style="background:#f5a623">C</div><div><div class="nm">Centro Kart <svg width="26" height="26" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#0a6cff"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="vb">VERIFIED BUSINESS</div></div></div>
+        <div class="msg">Thank you for your order. Your order id is <b>#12123</b>.</div>
+        <div class="line"><b id="oline"></b></div>
+        <div class="steps"><div class="st" id="os0"><i></i>Ordered</div><div class="st" id="os1"><i></i>Packed</div><div class="st" id="os2"><i></i>Shipped</div><div class="st" id="os3"><i></i><span id="os3t">Out for delivery</span></div></div>
+        <div class="act">TRACK ORDER</div>
+      </div>
+      <div class="L" id="Lbill">
+        <div class="who"><div class="av" style="background:#e5484d">E</div><div><div class="nm">PowerGrid <svg width="26" height="26" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#0a6cff"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="vb">VERIFIED BUSINESS</div></div></div>
+        <div class="msg">Your electricity bill for September is ready.</div>
+        <div style="position:absolute;left:30px;top:168px;display:flex;align-items:baseline;gap:18px"><span class="big" style="font-size:66px" id="amt">₹1,284</span><span style="font-size:20px;color:#f56905;font-weight:600" id="due">Due 5 Oct</span></div>
+        <div class="act" id="billAct"><span id="billLbl">PAY NOW</span></div>
+      </div>
+      <div class="L" id="Lcheck">
+        <div class="who"><div class="av" style="background:#0aa3c2">A</div><div><div class="nm">AirVista <svg width="26" height="26" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#0a6cff"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="vb">VERIFIED BUSINESS</div></div></div>
+        <div style="position:absolute;left:30px;top:124px;display:flex;align-items:center;gap:26px">
+          <div><div class="big" style="font-size:54px">BOM</div><div style="font-size:16px;color:#777">Mumbai · 06:45</div></div>
+          <svg width="120" height="30" viewBox="0 0 120 30"><path d="M4 15h100" stroke="#c7ccd6" stroke-width="3" stroke-dasharray="6 7"/><path d="M104 7l12 8-12 8z" fill="#0a6cff"/></svg>
+          <div><div class="big" style="font-size:54px">BLR</div><div style="font-size:16px;color:#777">Bengaluru · 08:30</div></div></div>
+        <div style="position:absolute;left:30px;top:232px;font-size:17px;color:#555">AirVista 7661 · <b style="color:#19a14b">Confirmed</b> · PNR X7K2QF</div>
+        <div id="seat" style="position:absolute;right:30px;top:140px;padding:16px 22px;border-radius:18px;background:#0a6cff;color:#fff;text-align:center"><div style="font-size:15px;opacity:.8">Seat</div><div style="font-size:44px;font-weight:700;line-height:1">14A</div><div style="font-size:14px;opacity:.85">Gate 22</div></div>
+        <div class="act">WEB CHECK-IN</div>
+      </div>
+      <div class="L" id="Lfeed">
+        <div class="who"><div class="av" style="background:#111">T</div><div><div class="nm">TaxiGo <svg width="26" height="26" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#0a6cff"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="vb">VERIFIED BUSINESS</div></div></div>
+        <div class="msg">How was your ride with Rahul?</div>
+        <div id="stars" style="position:absolute;left:0;right:0;top:172px;display:flex;justify-content:center;gap:12px"></div>
+        <div id="thanks" style="position:absolute;left:0;right:0;top:246px;text-align:center;font-size:18px;color:#19a14b;font-weight:600">Thanks! 50 reward points credited.</div>
+        <div class="act">VIEW REWARDS</div>
+      </div>
+      <div class="L" id="Lrow">
+        <div class="av" style="background:#111">T</div><div><div class="t" style="font-size:22px;font-weight:600;display:flex;align-items:center;gap:8px">TaxiGo <svg width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#0a6cff"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div style="font-size:16px;color:#777">50 reward points credited</div></div><div style="margin-left:auto;font-size:15px;color:#999">12:34</div>
+      </div>
+    </div>
+  </div>
+  <div id="sticky"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M15 3l6 6-4 1-4 4 1 5-2 2-4-4-5 5-1-1 5-5-4-4 2-2 5 1 4-4z" fill="#fff"/></svg>Pinned until used</div>
+  <div id="ripple"></div><div id="tap"></div>
+ </div>
+
+  <div class="w" id="a0" style="left:1060px;top:420px;font-size:110px">Unknown<br>senders.</div>
+  <div class="w" id="a1" style="left:1060px;top:420px;font-size:110px">Short<br>links.</div>
+  <div class="w" id="a2" style="left:1060px;top:470px;font-size:130px">Unread.</div>
+  <div class="w" id="a3" style="left:1060px;top:470px;font-size:130px">Ignored.</div>
+  <div class="w" id="a4" style="left:1060px;top:380px;font-size:92px;letter-spacing:-2.5px">What if they<br>knew it was<br><em>really you?</em></div>
+  <div class="lab" id="t0">Truecaller <span style="color:#0a6cff">Business Chat</span></div>
+  <div class="lab" id="t1">One-tap OTPs.</div>
+  <div class="lab" id="t2">Order tracking.</div>
+  <div class="lab" id="t3">Bill payments.</div>
+  <div class="lab" id="t4">Web check-in.</div>
+  <div class="lab" id="t5">Feedback that gets answered.</div>
+  <div class="lab" id="t6" style="top:920px">Every message, <span style="color:#19a14b">verified.</span></div>
+  <div id="counter">0M+</div><div id="clab">people trust Truecaller, worldwide.</div>
+  <div class="feat" id="f0"><svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z" fill="#0a6cff"/><path d="M8 12l3 3 5-6" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Trusted branding.</div>
+  <div class="feat" id="f1"><svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6zm-2 15a2 2 0 0 0 4 0z" fill="#0a6cff"/></svg>Smart notifications.</div>
+  <div class="feat" id="f2"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="4" fill="#0a6cff"/><circle cx="9" cy="10" r="2" fill="#fff"/><path d="M5 18l5-5 3 3 3-3 3 5z" fill="#fff"/></svg>Rich messaging.</div>
+  <div class="feat" id="f3"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="5" fill="#19a14b"/><path d="M8 12h8m-3-3l3 3-3 3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Action first.</div>
+  <div class="feat" id="f4"><svg viewBox="0 0 24 24"><path d="M3 18l6-6 4 4 8-9" fill="none" stroke="#0a6cff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 7h6v6" fill="none" stroke="#0a6cff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>Better engagement.</div>
+  <div class="lab" id="t7" style="top:470px;font-size:96px;letter-spacing:-3.5px">Make every message <span style="color:#0a6cff">count.</span></div>
+  <img id="endlogo" src="../../../projects/truecaller-business/assets/brand/logo.png">
+  <div id="endsub">Business Chat</div><div id="endurl">business.truecaller.com</div>
+</div>
+
+<script src="../lib/core.js"></script>
+<script>
+const {E, clamp, lerp, P, kf, px, fontsReady} = K;
+const $ = s => typeof s === 'string' ? document.querySelector(/^[#.]/.test(s) ? s : '#' + s) : s;
+const css = (el, o) => { el = $(el); for (const k in o) el.style[k] = o[k]; return el; };
+const show = (el, on) => { el = $(el); el.style.display = on ? '' : 'none'; return on; };
+const BAR = 2.4, B = n => (n - 1) * BAR;             // film bar n (1-based); the drop is bar 7 = 14.4 s
+const DROP = B(7);
+
+// ---- lock-screen notifications (anonymous, sketchy) arriving faster and faster
+const N = [
+  ['VM-HDFCBK', 'Your A/c XX4417 debited INR 2,499.00. If not you, call 1800...'],
+  ['AD-PAYTRL', '482913 is your OTP for login. Do not share. -PYTRL'],
+  ['+91 98201 44731', 'Your parcel is held at hub. Update address: bit.ly/3xTq9'],
+  ['JM-CNTRKT', 'Order #12123 shipped. Track: cntr.kt/t/8Hk2'],
+  ['VK-AIRVST', 'Web check-in open for 7661. Click: av.st/ci?x=Q7'],
+  ['AX-PWRGRD', 'Bill Rs.1284 due 05-Oct. Pay: pwg.in/p/44'],
+  ['+91 90043 11820', 'Congrats! You won a voucher. Claim now: tinyurl.com/…'],
+  ['BZ-TXIGO', 'Rate your ride: tx.go/r/19'],
+  ['VM-ICICIB', 'Dear customer, your KYC is pending. Update at…'],
+  ['+91 88792 04561', 'Loan approved Rs 5,00,000. Reply YES'],
+];
+const ARR = [0.3, 0.9, 1.5, 2.1, 2.7, 3.3, 4.2, 4.8, 5.25, 5.7, 6.0, 6.3, 6.6, 6.85, 7.1, 7.3, 7.5, 7.7, 7.9, 8.05, 8.2, 8.35, 8.5, 8.65];
+const OTP_I = 1;
+function buildNotifs() {
+  $('notifs').innerHTML = ARR.map((a, i) => { const [s, b] = N[i % N.length];
+    return `<div class="nt" id="n${i}"><div class="ic"><svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.3 1.2 4.3 3.1 5.8L4 21l4.6-2.3c1.1.3 2.2.4 3.4.4 5.5 0 10-3.6 10-8S17.5 3 12 3z" fill="#fff"/></svg></div><div><div class="h"><span>${s}</span><span>now</span></div><div class="b">${b}</div></div></div>`; }).join('');
+}
+
+// ---- the card: one object, a shape table over the film [t, [w, h, cy, r, head, green]]
+const SW0 = 1.32;
+const NOTIF = s => [364 * s / SW0, 84 * s / SW0, 540 + (520 - 540) / SW0, 22 * s / SW0, 0, 0];
+const OTP = [820, 380, 530, 30, 56, 1], ORDER = [880, 470, 540, 30, 56, 1], BILL = [820, 390, 530, 30, 56, 1],
+      CHECK = [900, 420, 540, 30, 56, 1], FEED = [820, 420, 540, 30, 56, 1], ROW = [960, 112, 558, 22, 0, 0];
+let CS = null;
+const shape = t => kf(t, CS);
+
+// camera on the phone stage: focus F → frame point P at scale s (log space)
+const F = [700, 521];
+function cam(t) {
+  const p = P(t, 12.5, 14.4, E.inOutCubic), q = P(t, 14.4, 14.95, E.inCubic);
+  const s = Math.exp(lerp(0, Math.log(2.3), p) + Math.log(1.35) * q) * (1 + 0.012 * Math.sin(t * 0.8));
+  const Px = lerp(F[0], 960, p), Py = lerp(F[1], 520, p);
+  return { s, tx: Px - F[0] * s, ty: Py - F[1] * s };
+}
+
+function layer(id, a0, a1, d = 0.24) {
+  const a = P(T, a0, a0 + d, E.outCubic) * (1 - P(T, a1, a1 + d * 0.8, E.inCubic));
+  show(id, a > 0.001);
+  if (a > 0.001) css(id, { opacity: a.toFixed(3), transform: `scale(${(0.95 + 0.05 * a).toFixed(4)})`, filter: `blur(${((1 - a) * 8).toFixed(1)}px)` });
+  return a;
+}
+function word(id, a0, a1, mode = 'rise') {
+  const i = P(T, a0, a0 + (mode === 'cut' ? 0.12 : 0.34), E.outExpo), o = P(T, a1, a1 + 0.2, E.inCubic), v = i * (1 - o);
+  show(id, v > 0.001);
+  if (v > 0.001) css(id, { opacity: v, transform: mode === 'cut' ? `scale(${(1.06 - 0.06 * i).toFixed(4)})` : `translateY(${px((1 - i) * 30 - o * 20)})`,
+    filter: `blur(${((1 - i) * 10 + o * 8).toFixed(1)}px)`, transformOrigin: 'left center' });
+  return v;
+}
+let T = 0;
+const TAPS = [[17.4, 'otp'], [20.7, 'order'], [22.9, 'bill'], [25.1, 'check'], [27.5, 'star']];
+
+window.boot = async () => {
+  buildNotifs();
+  $('stars').innerHTML = [0, 1, 2, 3, 4].map(i => `<svg class="star" id="st${i}" viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z" fill="#e3e7ee"/></svg>`).join('');
+  CS = [[0, NOTIF(1)], [DROP, NOTIF(2.3)], [15.0, OTP, t => E.outBack(t, 1.1)], [19.05, OTP], [19.55, ORDER, E.inOutCubic], [21.45, ORDER],
+        [21.95, BILL, E.inOutCubic], [23.85, BILL], [24.35, CHECK, E.inOutCubic], [26.25, CHECK], [26.75, FEED, E.inOutCubic],
+        [28.75, FEED], [29.4, ROW, E.inOutCubic], [45, ROW]];
+  await fontsReady(["400 20px Poppins", "500 20px Poppins", "600 20px Poppins", "700 20px Poppins", "800 20px Poppins"]);
+  await new Promise(r => { const i = $('endlogo'); i.complete ? r() : (i.onload = r); });
+};
+
+window.seek = async (t) => {
+  T = t;
+  // world: slow dot drift, pulse on the beat
+  const ph = ((t % 0.6) / 0.6), pulse = t > DROP ? Math.exp(-ph * 5) * 0.12 : 0;
+  css('dots', { transform: `translate(${px((t * 9) % 36)},${px((t * 5) % 36)})`, opacity: (0.8 + pulse).toFixed(3) });
+
+  // ===== phone act (0 → 14.95)
+  const stage = $('stage'); const onPhone = t < 15.0; show(stage, onPhone);
+  if (onPhone) {
+    const c = cam(t), gone = P(t, DROP, 14.95, E.inCubic);
+    css(stage, { transform: `translate(${px(c.tx)},${px(c.ty)}) scale(${c.s.toFixed(5)})`, opacity: (1 - gone).toFixed(3), filter: `blur(${(gone * 12).toFixed(1)}px)` });
+    const intro = P(t, 0, 0.5, E.outCubic); css('phone', { transform: `translateY(${px((1 - intro) * 60)})` });
+    const swipe = [9.75, 10.25];
+    let arrived = 0;
+    ARR.forEach((a, i) => {
+      const el = $('n' + i); const vis = t >= a; show(el, vis); if (!vis) return; arrived++;
+      let y = 0; for (let j = i + 1; j < ARR.length; j++) if (t >= ARR[j]) y += 94 * E.outCubic(clamp((t - ARR[j]) / 0.3));
+      const ai = E.outExpo(clamp((t - a) / 0.35));
+      let ty = 290 + y - (1 - ai) * 40, op = ai, bl = (1 - ai) * 6, sc = 0.96 + 0.04 * ai;
+      if (i === OTP_I) {                                   // the one that stays: glides to the middle
+        const g = P(t, 10.45, 11.2, E.inOutCubic); ty = lerp(ty, 360, g); sc *= 1 + 0.03 * g;
+      } else {
+        const k = P(t, swipe[0] + 0.1 + (ARR.length - i) * 0.012, swipe[0] + 0.45 + (ARR.length - i) * 0.012, E.inCubic);
+        ty -= 900 * k; op *= 1 - k; bl += 10 * k;
+      }
+      if (ty > 860) { show(el, false); return; }
+      css(el, { top: px(ty), opacity: op.toFixed(3), filter: bl > 0.1 ? `blur(${bl.toFixed(1)}px)` : '', transform: `scale(${sc.toFixed(4)})` });
+    });
+    $('unread').textContent = `${arrived} unread`;
+    css('unread', { opacity: (1 - P(t, 9.8, 10.1)).toFixed(3) });
+    css('clock', { opacity: (1 - P(t, 3, 5) * 0.5).toFixed(3) });
+  }
+
+  // ===== the card (14.4 →): its world is scaled 1.32, then the camera pulls back to 1.0 to reveal the inbox
+  css('cw', { transform: `scale(${kf(t, [[0, SW0], [28.8, SW0], [29.5, 1.0, E.inOutCubic]]).toFixed(4)})` });
+  const card = $('card'); const onCard = t >= DROP - 0.001 && t < 31.75; show(card, onCard);
+  if (onCard) {
+    const [w, h, cy, r, head, green] = shape(t);
+    let x = 960 - w / 2, y = cy - h / 2, sc = 1, op = 1;
+    if (t > 31.2) { const k = P(t, 31.2, 31.72, E.inCubic); sc = lerp(1, 0.08, k); y = lerp(y, 470 - h / 2, k); op = 1 - P(t, 31.5, 31.72); }
+    css(card, { left: px(x), top: px(y), width: px(w), height: px(h), borderRadius: px(r), opacity: op, transform: `scale(${sc.toFixed(4)})`,
+      background: `rgba(25,161,75,${green.toFixed(3)})`, boxShadow: green > 0.5 ? '0 40px 90px rgba(20,60,40,.18)' : '0 10px 30px rgba(20,40,90,.10)' });
+    css('panel', { top: px(head), left: px(6 * green), right: px(6 * green), bottom: px(6 * green), borderRadius: px(Math.max(0, r - 6 * green)) });
+    css('chead', { opacity: clamp(green * 1.4 - 0.3).toFixed(3), height: px(Math.max(1, head)) });
+    layer('Lnotif', -1, 14.55, 0.2);
+    layer('Lotp', 14.62, 19.05);
+    const copied = t >= 17.42; $('otpLbl').textContent = copied ? 'OTP COPIED ✓' : 'COPY OTP';
+    css('otpAct', { background: copied ? '#19a14b' : '#eaf7ef', color: copied ? '#fff' : '#138a3f' });
+    const ao = layer('Lorder', 19.5, 21.45);
+    if (ao) { const st = [19.9, 20.05, 20.2, 20.75]; st.forEach((s, i) => { const el = $('os' + i); el.classList.toggle('on', t >= s && i < 3); el.classList.toggle('now', t >= s && i === 3); });
+      $('oline').style.width = `${(P(t, 19.9, 20.8, E.inOutCubic) * 100).toFixed(1)}%`; $('os3t').textContent = t >= 20.75 ? 'Today by 7 pm' : 'Out for delivery'; }
+    const ab = layer('Lbill', 21.9, 23.85);
+    if (ab) { const paid = t >= 22.92; $('billLbl').textContent = paid ? 'PAID ✓' : 'PAY NOW'; css('billAct', { background: paid ? '#19a14b' : '#eaf7ef', color: paid ? '#fff' : '#138a3f' });
+      $('due').textContent = paid ? 'Paid · receipt sent' : 'Due 5 Oct'; css('due', { color: paid ? '#19a14b' : '#f56905' }); }
+    const ac = layer('Lcheck', 24.3, 26.25);
+    if (ac) { const s = P(t, 25.15, 25.5, E.outBack); css('seat', { opacity: clamp(s * 1.5).toFixed(3), transform: `translateX(${px((1 - s) * 60)}) scale(${(0.9 + 0.1 * s).toFixed(3)})` }); }
+    const af = layer('Lfeed', 26.7, 28.75);
+    if (af) { for (let i = 0; i < 5; i++) { const on = t >= 27.2 + i * 0.075; const el = $('st' + i); el.querySelector('path').setAttribute('fill', on ? '#f5a623' : '#e3e7ee');
+        const k = t - (27.2 + i * 0.075); el.style.transform = `scale(${(on ? 1 + 0.25 * Math.exp(-k * 10) * Math.cos(k * 20) : 1).toFixed(3)})`; }
+      css('thanks', { opacity: P(t, 27.75, 28.0).toFixed(3) }); }
+    layer('Lrow', 29.1, 40, 0.28);
+  }
+  // sticky alert pinned above the OTP card
+  const sa = P(t, 17.7, 18.05, E.outBack) * (1 - P(t, 18.95, 19.1)); show('sticky', sa > 0.001);
+  if (sa > 0.001) css('sticky', { left: px(960 - 110), top: px(530 - 190 - 70 - (1 - sa) * 30), opacity: clamp(sa * 1.4).toFixed(3) });
+
+  // inbox around the row
+  const ib = $('inbox'); show(ib, t >= 29.0 && t < 31.75);
+  if (t >= 29.0) {
+    const hd = P(t, 29.2, 29.6, E.outExpo); css('ihead', { opacity: hd, transform: `translateY(${px((1 - hd) * 20)})` });
+    ['r0', 'r1', 'r3', 'r4'].forEach((id, i) => { const a = P(t, 29.25 + i * 0.1, 29.65 + i * 0.1, E.outExpo);
+      const k = P(t, 31.2 + i * 0.04, 31.62 + i * 0.04, E.inCubic); const el = $(id); const top0 = parseFloat(el.style.top);
+      css(el, { opacity: (a * (1 - P(t, 31.45, 31.65))).toFixed(3), transform: `translate(0,${px((1 - a) * 30 + (470 - 56 - top0) * k)}) scale(${lerp(1, 0.08, k).toFixed(4)})` }); });
+  }
+
+  // taps (touch indicator)
+  let tp = null;
+  const SW = [[9.6, 700, 900], [9.75, 700, 860], [10.25, 700, 360]];
+  if (t > 9.55 && t < 10.4) tp = { x: kf(t, SW.map(k => [k[0], k[1]])), y: kf(t, SW.map(k => [k[0], k[2]], E.inOutCubic)), a: P(t, 9.55, 9.65) * (1 - P(t, 10.25, 10.4)) };
+  for (const [tt, kind] of TAPS) if (t > tt - 0.45 && t < tt + 0.35) {
+    const [w, h, cy] = shape(tt); let x = 960, y = cy + h / 2 - 6 - 33;
+    if (kind === 'star') { x = 960 + 2 * 72; y = cy - h / 2 + 56 + 172 + 30; }
+    tp = { x, y, a: P(t, tt - 0.45, tt - 0.3) * (1 - P(t, tt + 0.15, tt + 0.35)), press: Math.exp(-Math.max(0, t - tt) * 12) * (t >= tt), t0: tt };
+  }
+  show('tap', !!tp); show('ripple', !!(tp && tp.t0 && t >= tp.t0));
+  if (tp) { css('tap', { left: px(tp.x), top: px(tp.y), opacity: tp.a.toFixed(3), transform: `scale(${(1 - 0.18 * (tp.press || 0)).toFixed(3)})` });
+    if (tp.t0 && t >= tp.t0) { const k = P(t, tp.t0, tp.t0 + 0.4, E.outCubic), rr = 20 + 60 * k; css('ripple', { left: px(tp.x - rr), top: px(tp.y - rr), width: px(rr * 2), height: px(rr * 2), opacity: (1 - k).toFixed(3) }); } }
+
+  // words
+  word('a0', 1.2, 2.3, 'cut'); word('a1', 2.4, 3.5, 'cut'); word('a2', 4.8, 7.1, 'cut'); word('a3', 7.2, 9.4, 'cut');
+  word('a4', 10.8, 13.4);
+  word('t0', 15.05, 16.7); word('t1', 16.85, 18.95); word('t2', 19.3, 21.35); word('t3', 21.7, 23.75); word('t4', 24.1, 26.15); word('t5', 26.5, 28.6);
+  word('t6', 29.5, 31.2);
+  // counter
+  const cA = P(t, 31.5, 31.85, E.outExpo), cO = P(t, 33.45, 33.6); show('counter', t > 31.45 && t < 33.62); show('clab', t > 31.9 && t < 33.62);
+  if (t > 31.45) { const n = Math.round(450 * P(t, 31.5, 32.6, E.outCubic)); $('counter').textContent = `${n}M+`;
+    css('counter', { opacity: cA * (1 - cO), transform: `scale(${(1.25 - 0.25 * cA + 0.03 * P(t, 32.6, 33.5)).toFixed(4)})` });
+    const la = P(t, 32.1, 32.45, E.outExpo); css('clab', { opacity: la * (1 - cO), transform: `translateY(${px((1 - la) * 20)})` }); }
+  // features, one per 1.6 beats, scale punch on each
+  ['f0', 'f1', 'f2', 'f3', 'f4'].forEach((id, i) => { const a = 33.6 + i * 0.96, on = t >= a && t < a + 0.96; show(id, on);
+    if (on) { const k = t - a; css(id, { transform: `scale(${(1 + 0.08 * Math.exp(-k * 9)).toFixed(4)})`, opacity: clamp(k / 0.08).toFixed(3) }); } });
+  word('t7', 38.4, 40.2);
+  // end card
+  const la = P(t, 40.45, 40.85, E.outExpo), sa2 = P(t, 40.8, 41.15, E.outExpo), ua = P(t, 41.1, 41.45, E.outExpo);
+  show('endlogo', t > 40.4); show('endsub', t > 40.75); show('endurl', t > 41.05);
+  css('endlogo', { opacity: la, transform: `translateY(${px(-40 + (1 - la) * 20)}) scale(${(1.08 - 0.08 * la).toFixed(4)})`, filter: `blur(${((1 - la) * 8).toFixed(1)}px)` });
+  css('endsub', { opacity: sa2, transform: `translateY(${px((1 - sa2) * 18)})` }); css('endurl', { opacity: ua });
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+node_modules/
+.wrangler/
+.dev.vars
+.env
+venv/
+__pycache__/
+*.pyc
+engines/*/output/
+engines/*/projects/
+engines/*/venv/
+.secrets.json
+.neon
+.env.local
+.env.local

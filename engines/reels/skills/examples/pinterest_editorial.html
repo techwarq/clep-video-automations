@@ -1,0 +1,135 @@
+<!doctype html>
+<!-- Pinterest edit · editorial look. Voiceover over fast-cut Pinterest footage, big serif
+     phrase captions that hop around the frame, tiny location tags, one paper title card.
+     Plan: beats b1..bN with narration; media keys named per beat (b1, b1b, b2, ...).
+     Everything below the CONFIG block is reusable craft; CONFIG is what changes per reel. -->
+<html>
+<head>
+<meta charset="utf-8">
+<script src="data.js"></script>
+<script src="runtime.js"></script>
+<style>
+  html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #0d0d0c; }
+  .layer { position: absolute; inset: 0; }
+  #shot { width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 50%;
+    filter: contrast(1.04) saturate(1.06) brightness(.97); }
+  #vignette { background: radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 55%, rgba(0,0,0,.45) 100%); }
+  #grain { opacity: .07; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='300' height='300' filter='url(%23n)'/></svg>"); }
+  #flash { background: #fff; opacity: 0; }
+
+  /* phrase captions */
+  #cap { position: absolute; font-family: 'Instrument Serif', Georgia, serif; font-size: 150px; line-height: .95;
+    color: #fff; letter-spacing: -1px; text-shadow: 0 4px 30px rgba(0,0,0,.35); white-space: nowrap; }
+  #cap .em { font-style: italic; }
+
+  /* location tag */
+  #tag { position: absolute; left: 64px; top: 210px; padding: 12px 20px 12px 18px; border-radius: 10px;
+    background: rgba(245,243,238,.94); color: #151515; font: 600 32px 'Avenir Next', sans-serif;
+    display: flex; align-items: center; gap: 12px; }
+  #tag i { width: 13px; height: 13px; border-radius: 50%; background: #e5372b; display: block; }
+
+  /* paper title card */
+  #card { background: #efece4; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  #card h1 { margin: 0; font: italic 400 120px/1 'Instrument Serif', Georgia, serif; color: #151515; letter-spacing: -2px; white-space: nowrap; }
+  #card .rule { height: 3px; background: #151515; margin: 26px 0 30px; }
+  #card p { margin: 0; font: 600 34px 'Avenir Next', sans-serif; letter-spacing: 8px; color: #151515; }
+</style>
+</head>
+<body>
+<div class="layer"><img id="shot"></div>
+<div class="layer" id="vignette"></div>
+<div class="layer" id="grain"></div>
+<div id="tag"><i></i><span id="tagtext"></span></div>
+<div id="cap"></div>
+<div class="layer" id="card"><h1 id="cardh"></h1><div class="rule" id="rule"></div><p id="cardp"></p></div>
+<div class="layer" id="flash"></div>
+<script>
+  // ───────── CONFIG (per reel) ─────────
+  // Per beat: footage keys (cut through in order on word onsets), optional tag, or a title card.
+  const SHOTS = {
+    b1: { keys: ['b1', 'b1b'], tag: 'San Francisco' },
+    b2: { keys: ['b2'], tag: 'Day 1' },
+    b3: { card: { title: 'what nobody tells you', sub: 'WEEK ONE' } },
+    b4: { keys: ['b4', 'b4b'] },
+    b5: { keys: ['b5'], tag: '7:40 AM' },
+    b6: { keys: ['b6'] },
+  };
+  const EMPHASIS = ['nobody', 'purpose', 'simple'];       // italic in captions
+  R.music('warm_indie', { gain: 0.2 });
+
+  // ───────── craft ─────────
+  // Cut list: every beat starts a shot; beats longer than ~1.4 s cut again on a word onset.
+  const cuts = [];
+  for (const b of R.beats) {
+    const s = SHOTS[b.id] || {};
+    if (s.card) { cuts.push({ t: b.t0, card: s.card, beat: b }); continue; }
+    const keys = s.keys || [];
+    let k = 0, last = b.t0;
+    cuts.push({ t: b.t0, key: keys[0], beat: b, n: 0 });
+    for (let i = b.w0 + 1; i < b.w1; i++) {
+      const on = R.words[i].start - 0.06;
+      if (on - last > 1.4 && b.t1 - on > 0.7) { k++; last = on; cuts.push({ t: on, key: keys[k % keys.length], beat: b, n: k }); }
+    }
+  }
+  const cutAt = t => { let c = cuts[0]; for (const x of cuts) if (x.t <= t) c = x; return c; };
+  const MOVES = ['push', 'drift', 'pull', 'rise'];
+  function camera(move, u, local) {        // u = 0..1 through the shot
+    const snap = 1 + 0.06 * Math.exp(-local / 0.09);            // tiny punch on every cut
+    if (move === 'push') return [0, 0, snap * R.lerp(1.04, 1.12, R.E.inOutSine(u))];
+    if (move === 'pull') return [0, 0, snap * R.lerp(1.14, 1.05, R.E.inOutSine(u))];
+    if (move === 'drift') return [R.lerp(-30, 30, u), 0, snap * 1.1];
+    return [0, R.lerp(30, -30, u), snap * 1.1];
+  }
+  // Soft whoosh on every beat change (not every sub-cut: restraint keeps it premium).
+  R.beats.slice(1).forEach(b => R.sfx('whoosh_soft', b.t0 - 0.12, 0.25));
+
+  // Caption phrases hop between these anchor spots (x, y, align).
+  const SPOTS = [[96, 360, 'left'], [540, 820, 'center'], [96, 1430, 'left'], [984, 520, 'right'],
+                 [984, 1320, 'right'], [540, 1150, 'center'], [96, 930, 'left']];
+  const chunks = R.chunks({ maxWords: 3, maxChars: 12 });
+  const cap = R.$('cap');
+
+  R.scene(t => {
+    const c = cutAt(t);
+    const isCard = !!c.card;
+    R.vis('card', isCard);
+    R.vis('tag', !isCard && !!(SHOTS[c.beat.id] || {}).tag);
+    if (isCard) {
+      const local = t - c.t;
+      R.$('cardh').textContent = c.card.title;
+      R.$('cardp').textContent = c.card.sub;
+      R.css('cardh', { opacity: R.P(t, c.t, c.t + 0.35), transform: `translateY(${(1 - R.P(local, 0, 0.5)) * 24}px)` });
+      R.css('rule', { width: `${R.P(local, 0.2, 0.9, R.E.inOutCubic) * 520}px` });
+      R.css('cardp', { opacity: R.P(local, 0.5, 0.9) });
+    } else {
+      const local = t - c.t, next = cuts[cuts.indexOf(c) + 1];
+      const len = (next ? next.t : R.dur) - c.t;
+      const [x, y, s] = camera(MOVES[(cuts.indexOf(c)) % MOVES.length], R.clamp(local / len), local);
+      R.show('shot', c.key, local + 0.4, { mode: 'loop' });
+      R.css('shot', { transform: R.tf(x, y, s) });
+      R.$('tagtext').textContent = (SHOTS[c.beat.id] || {}).tag || '';
+      R.css('tag', { opacity: R.P(t, c.beat.t0 + 0.1, c.beat.t0 + 0.3) });
+    }
+    R.css('flash', { opacity: 0.18 * Math.exp(-(t - c.t) / 0.05) });
+
+    // Captions: current phrase, spoken word full white, the rest dimmed; hidden on the title card.
+    const ch = isCard ? null : R.chunkAt(chunks, t);
+    R.vis(cap, !!ch);
+    if (ch) {
+      const n = chunks.indexOf(ch);
+      const [x, y, align] = SPOTS[Math.floor(R.hash(n, 3) * SPOTS.length) % SPOTS.length];
+      const spoken = R.wordAt(t);
+      cap.innerHTML = ch.words.map((w, j) => {
+        const word = R.clean(w.w), em = EMPHASIS.includes(word.toLowerCase());
+        return `<span class="${em ? 'em' : ''}" style="opacity:${ch.i0 + j <= spoken ? 1 : .45}">${R.esc(word)}</span>`;
+      }).join(' ');
+      const shift = align === 'center' ? '-50%' : align === 'right' ? '-100%' : '0';
+      const rise = (1 - R.P(t, ch.start, ch.start + 0.22)) * 18;
+      R.css(cap, { left: x + 'px', top: y + 'px', transform: `translate(${shift}, ${rise}px)`,
+                   textAlign: align, opacity: R.P(t, ch.start, ch.start + 0.12) });
+    }
+  });
+</script>
+</body>
+</html>

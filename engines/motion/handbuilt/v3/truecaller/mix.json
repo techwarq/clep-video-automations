@@ -1,0 +1,27 @@
+{
+ "duration": 43.6,
+ "music": {"file": "src/music/truecaller.mp3", "gain_db": -3, "offset": 0,
+  "automation": [[0,-6],[0.8,0],[13.75,0],[13.8,-60],[14.38,-60],[14.4,0],[33.55,0],[33.6,-4],[42.0,-4],[43.6,-30]],
+  "duck": [[14.4,-3,0.6]]},
+ "cues": [
+  {"id":"warm_pop_whatsapp","t":0.3,"gain_db":-10},{"id":"warm_pop_whatsapp","t":0.9,"gain_db":-10,"rate":1.05},
+  {"id":"warm_pop_whatsapp","t":1.5,"gain_db":-10,"rate":0.95},{"id":"warm_pop_whatsapp","t":2.1,"gain_db":-11,"rate":1.1},
+  {"id":"warm_pop_whatsapp","t":2.7,"gain_db":-11},{"id":"warm_pop_whatsapp","t":3.3,"gain_db":-11,"rate":1.08},
+  {"id":"warm_mail","t":4.2,"gain_db":-12},{"id":"warm_pop_whatsapp","t":4.8,"gain_db":-11},{"id":"warm_pop_whatsapp","t":5.25,"gain_db":-12,"rate":1.1},
+  {"id":"warm_pop_whatsapp","t":5.7,"gain_db":-12,"rate":1.2},{"id":"warm_pop_whatsapp","t":6.0,"gain_db":-13},{"id":"warm_pop_whatsapp","t":6.3,"gain_db":-13,"rate":1.15},
+  {"id":"warm_pop_whatsapp","t":6.6,"gain_db":-13,"rate":1.25},{"id":"warm_pop_whatsapp","t":6.85,"gain_db":-13,"rate":0.9},{"id":"warm_pop_whatsapp","t":7.1,"gain_db":-13,"rate":1.3},
+  {"id":"warm_pop_whatsapp","t":7.5,"gain_db":-14,"rate":1.1},{"id":"warm_pop_whatsapp","t":7.9,"gain_db":-14,"rate":1.35},{"id":"warm_pop_whatsapp","t":8.2,"gain_db":-14,"rate":1.2},{"id":"warm_pop_whatsapp","t":8.5,"gain_db":-14,"rate":1.4},
+  {"id":"warm_word","t":1.2,"gain_db":-9},{"id":"warm_word","t":2.4,"gain_db":-9},{"id":"warm_word","t":4.8,"gain_db":-7},{"id":"warm_word","t":7.2,"gain_db":-6},
+  {"id":"warm_pullback","t":9.7,"gain_db":-4},{"id":"warm_glide","t":10.45,"gain_db":-10},{"id":"warm_word","t":10.8,"gain_db":-10},
+  {"id":"warm_portal","t":12.5,"gain_db":-5},{"id":"warm_iris","t":14.32,"gain_db":-2},{"id":"warm_stretch","t":14.45,"gain_db":-8},
+  {"id":"warm_alert","t":15.0,"gain_db":-7},{"id":"warm_click","t":17.4,"gain_db":-5},{"id":"warm_sent","t":17.45,"gain_db":-8},{"id":"warm_reply","t":17.7,"gain_db":-9},
+  {"id":"warm_stretch","t":19.1,"gain_db":-10,"rate":0.95},{"id":"warm_tick","t":19.9,"gain_db":-11},{"id":"warm_tick","t":20.05,"gain_db":-11,"rate":1.06},{"id":"warm_tick","t":20.2,"gain_db":-11,"rate":1.12},
+  {"id":"warm_click","t":20.7,"gain_db":-6},{"id":"warm_stretch","t":21.5,"gain_db":-10},{"id":"warm_click","t":22.9,"gain_db":-5},{"id":"warm_sent","t":22.95,"gain_db":-7},
+  {"id":"warm_stretch","t":23.9,"gain_db":-10,"rate":1.05},{"id":"warm_click","t":25.1,"gain_db":-5},{"id":"warm_pop_whatsapp","t":25.2,"gain_db":-9},
+  {"id":"warm_stretch","t":26.3,"gain_db":-10},{"id":"warm_tick","t":27.2,"gain_db":-10},{"id":"warm_tick","t":27.275,"gain_db":-10,"rate":1.08},{"id":"warm_tick","t":27.35,"gain_db":-10,"rate":1.16},{"id":"warm_tick","t":27.425,"gain_db":-10,"rate":1.24},{"id":"warm_click","t":27.5,"gain_db":-6},{"id":"warm_sent","t":27.75,"gain_db":-8},
+  {"id":"warm_collapse","t":28.8,"gain_db":-7},{"id":"warm_row","t":29.25,"gain_db":-12},{"id":"warm_row","t":29.45,"gain_db":-12},{"id":"warm_word","t":29.5,"gain_db":-9},
+  {"id":"warm_absorb","t":31.3,"gain_db":-6},{"id":"cold_counter","t":31.5,"gain_db":-12,"dur":1.1},{"id":"warm_word","t":31.5,"gain_db":-5},
+  {"id":"warm_word","t":33.6,"gain_db":-6},{"id":"warm_word","t":34.56,"gain_db":-7},{"id":"warm_word","t":35.52,"gain_db":-7},{"id":"warm_word","t":36.48,"gain_db":-7},{"id":"warm_word","t":37.44,"gain_db":-7},
+  {"id":"warm_word","t":38.4,"gain_db":-8},{"id":"warm_logo","t":40.4,"gain_db":-3}
+ ]
+}
