@@ -195,7 +195,7 @@ class Agent:
                             "confirm they read right, then finish.")
                 g = self.film_grid()
                 rep = K.film_check(self.film / "index.html", self.dur(), drop_t=g["drop_t"] if g else None)
-                hard = [blk for blk in rep.split("\n\n") if blk.startswith(("HARD CUTS", "SCRIPT ERRORS"))]
+                hard = [blk for blk in rep.split("\n\n") if blk.startswith(("HARD CUTS", "SCRIPT ERRORS", "SLIDESHOW"))]
                 if hard:
                     return "NOT YET: these must be fixed before the film can finish:\n" + "\n\n".join(hard)
             self.done = a

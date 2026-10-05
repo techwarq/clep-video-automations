@@ -49,6 +49,13 @@ again.
    - nothing happening on the drop.
 
    It also flags blank stand-in boxes and an ending that stands still too long, and it reports thin sound.
+
+   **SLIDESHOW blocks `finish`**, like hard cuts: if the picture drains to almost nothing between beats (old
+   content fades out, then new content fades in on an empty stage) two or more times, the film cannot finish.
+   Every beat must be built out of the one before it: the carrier morphs to a new shape and size with its new
+   contents cross-revealed inside it in 0.24 s, the camera pushes into a detail that becomes the next scene, or
+   the old content moves away while the new arrives. A headline above the same card, re-filled beat after beat,
+   is the failure this catches.
    Fix script errors and big layout problems, but do not spend round after round moving things a few pixels:
    after two checks, look.
 6. **`render_sheet` early**, right after the first fixes. Pick the moments that matter: each beat's hold, the

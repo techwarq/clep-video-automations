@@ -99,24 +99,68 @@ def composition(img: Image.Image) -> dict:
     return {"fill": round(float(m.mean()), 3), "subject": round(float(subject), 3), "empty": int(empty), "bleed": False}
 
 
+def detail(im: Image.Image) -> float:
+    """How much picture there is: mean edge strength of the frame (text, UI, shapes). Near 0 = an empty frame."""
+    g = np.asarray(im.convert("L").resize((480, 270)), dtype=np.float32)
+    return float(np.abs(np.diff(g, axis=0)).mean() + np.abs(np.diff(g, axis=1)).mean())
+
+
 def scan(index: Path, dur: float, fps: int = 30, every: float = 0.5) -> tuple:
-    """One low-res pass over the whole film: frame-to-frame change (for cuts, the drop, frozen holds) and the
-    composition every `every` seconds."""
+    """One low-res pass over the whole film: frame-to-frame change (for cuts, the drop, frozen holds), the
+    composition every `every` seconds, and the picture's detail 10× a second (for fade-to-empty transitions)."""
     p = Page(index, scale=0.25)
     try:
-        n = int(dur * fps); prev = None; d = []; comp = []; k = max(1, int(round(every * fps)))
+        n = int(dur * fps); prev = None; d = []; comp = []; det = []; k = max(1, int(round(every * fps)))
+        kd = max(1, int(round(fps / 10)))
         for i in range(n):
             p.seek(i / fps)
             im = p.shot()
             if i % k == 0:
                 comp.append({"t": round(i / fps, 2), **composition(im)})
+            if i % kd == 0:
+                det.append(detail(im))
             a = np.asarray(im.resize((240, 135)), dtype=np.float32)
             if prev is not None:
                 d.append(float(np.abs(a - prev).mean()))
             prev = a
     finally:
         p.close()
-    return np.array(d), comp
+    return np.array(d), comp, np.array(det)
+
+
+def blanks(det: np.ndarray, dur: float, hz: int = 10, deep: float = 0.12) -> List[tuple]:
+    """Fade-to-empty transitions: the picture drains to almost nothing (< `deep` of the detail around it) and the next
+    beat fades in on an empty stage — the slideshow signature. Calibrated: the hand-built truecaller film bottoms out
+    at 0.19 (once, its collapse into a counter) and notch at 0.29; the slideshow drafts drain to 0.03–0.04 every beat.
+    Returns (start, end, depth) per dip inside the body (after the opening, before the end card)."""
+    out, n, win = [], len(det), hz
+    lo, hi = int(0.6 * hz), n - int(4.0 * hz)
+    ref = lambda i: max(det[max(0, i - win):i].max(initial=0), det[i + 1:i + 1 + win].max(initial=0))
+    i = lo
+    while i < hi:
+        r = ref(i)
+        if r > 0 and det[i] < 0.6 * r:                        # a dip: follow it to its end, keep it if it goes deep
+            j, depth = i, det[i] / r
+            while j < hi and det[j] < 0.6 * ref(j):
+                depth = min(depth, det[j] / max(ref(j), 1e-6)); j += 1
+            if depth < deep:
+                out.append((round(i / hz, 1), round(j / hz, 1), round(float(depth), 2)))
+            i = j
+        i += 1
+    return out
+
+
+def slideshow(det: np.ndarray, dur: float) -> List[str]:
+    """Blocking: two or more beats that empty the frame before the next one appears."""
+    b = blanks(det, dur)
+    if len(b) < 2:
+        return []
+    at = ", ".join(f"{a:.1f}s" for a, _, _ in b[:6])
+    return [f"the picture empties out between beats at {at} (detail drops to {min(x for _, _, x in b):.0%} of the frames "
+            f"around it): each beat fades away and the next fades in on an empty stage. That is a slideshow, not a film. "
+            f"Build the next beat OUT OF the current one: morph the carrier into its next state (a new shape and size, "
+            f"its contents re-revealed inside it in 0.24 s), push the camera into a detail that becomes the next scene, "
+            f"or slide the old content away while the new arrives. The frame is never empty."]
 
 
 def jumps(index: Path, film: dict, fps: int = 30, d: np.ndarray = None) -> List[dict]:
@@ -415,12 +459,15 @@ def film_check(index: Path, dur: float, step: float = 0.5, jumps_fps: int = 30, 
         eg = ", ".join(re.search(r'"[^"]*"', a).group(0) for a, _ in tiny[:4])
         probs.append(f"- tiny text ({min(sz)}–{max(sz)}px on screen) in {len(tiny)} elements between {t0:.1f}s and {t1:.1f}s, e.g. {eg}: "
                      f"fine for a background crowd, not for the main subject or its action")
-    d, comp = scan(index, dur, fps=jumps_fps)
+    d, comp, det = scan(index, dur, fps=jumps_fps)
     cuts = jumps(index, {"dur": dur}, fps=jumps_fps, d=d)
     look = craft(d, comp, dur, fps=jumps_fps, drop_t=drop_t)
+    slides = slideshow(det, dur)
     parts = []
     if errs:
         parts.append("SCRIPT ERRORS:\n" + "\n".join(f"- {e}" for e in errs))
+    if slides:
+        parts.append("SLIDESHOW (measured from the frames):\n" + "\n".join(f"- {s}" for s in slides))
     if cuts:
         parts.append("HARD CUTS (a frame changes far more than its neighbours):\n" + "\n".join(f"- at {c['t']:.2f}s (change {c['diff']} vs {c['around']})" for c in cuts))
     if probs:
