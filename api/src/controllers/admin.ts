@@ -1,10 +1,11 @@
 import type { Context } from "hono";
-import { approveBetaRequest, listBetaRequests } from "../access";
+import { approveBetaRequest, isAdminEmail, listBetaRequests, listMembers, setPlan } from "../access";
 import { accessCodeEmail } from "../beta-emails";
 import { createUser, userExists } from "../db";
 import { issueKey, revokeKey } from "../keys";
 import { ensureVm, vmStatus } from "../gcp";
 import { sendEmail } from "../resend";
+import { PLAN_LIMITS } from "../plans";
 import { ENGINES, type App, type BetaRequest, type Engine } from "../types";
 
 // POST /admin/users  { email, name? }
@@ -52,4 +53,15 @@ export async function approveBeta(c: Context<App>) {
   if (!approved) return c.json({ error: "no such beta request" }, 404);
   const email = await sendEmail(c.env, accessCodeEmail(c.env, approved.request, approved.accessCode));
   return c.json({ request: withoutSecrets(approved.request), access_code: approved.accessCode, email });
+}
+
+export async function members(c: Context<App>) {
+  const rows = await listMembers(c.env);
+  return c.json({ members: rows.map((member) => ({ ...member, is_admin: isAdminEmail(c.env, member.email) })), plans: PLAN_LIMITS });
+}
+
+export async function changePlan(c: Context<App>) {
+  const body = await c.req.json<{ plan?: unknown }>().catch(() => ({} as { plan?: unknown }));
+  if (typeof body.plan !== "string" || !(body.plan in PLAN_LIMITS)) return c.json({ error: `plan must be one of ${Object.keys(PLAN_LIMITS).join(", ")}` }, 400);
+  return (await setPlan(c.env, c.req.param("id")!, body.plan)) ? c.json({ ok: true, plan: body.plan }) : c.json({ error: "no such user" }, 404);
 }

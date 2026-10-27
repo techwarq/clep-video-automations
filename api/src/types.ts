@@ -12,6 +12,7 @@ export type Env = {
   RESEND_API_KEY: string;
   EMAIL_FROM: string;
   ADMIN_EMAIL: string;
+  ADMIN_EMAILS: string;
   PLATFORM_URL: string;
   API_URL: string;
   BROWSER_ORIGINS: string;

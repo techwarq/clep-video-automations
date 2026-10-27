@@ -22,6 +22,7 @@ const CHOICES: Record<string, string[]> = {
 };
 const SHORT_TEXT_FIELDS = ["query", "goal", "audience", "voiceover"];
 const OBJECT_FIELDS = ["intro", "look", "outro"];
+const WALLPAPERS = ["sonoma", "dune", "sunset", "ocean", "silk", "aurora", "dusk-mesh", "graphite", "pixel-clouds"];
 const DEVICES = ["", "browser", "macbook"];
 const SOUNDS: unknown[] = [true, false, "warm", "cold"];
 const CURSOR = /^[a-z0-9# ]{0,60}$/i;
@@ -67,6 +68,12 @@ function sectionsProblem(sections: unknown): Problem {
   return isList ? null : `sections must be text or a list of up to ${MAX_SECTIONS} names`;
 }
 
+function backdropAllowed(bg: unknown): boolean {
+  if (!isText(bg, 200) || /^\s*image:/i.test(bg)) return false;
+  const wallpaper = bg.trim().match(/^wallpaper:(.*)$/i);
+  return !wallpaper || WALLPAPERS.includes(wallpaper[1].toLowerCase());
+}
+
 function storyProblem(body: Body): Problem {
   for (const field of OBJECT_FIELDS) {
     if (body[field] !== undefined && !isObject(body[field])) return `${field} must be an object`;
@@ -92,8 +99,8 @@ export function lookProblem(body: Body): Problem {
   for (const [field, choices] of Object.entries(CHOICES)) {
     if (body[field] !== undefined && !choices.includes(body[field] as string)) return `${field} must be one of ${choices.join(", ")}`;
   }
-  if (body.bg !== undefined && !(isText(body.bg, 200) && !/^\s*image:/i.test(body.bg))) {
-    return "bg must be a preset, gradient or solid colour";
+  if (body.bg !== undefined && !backdropAllowed(body.bg)) {
+    return `bg must be a preset, gradient, solid colour or wallpaper:${WALLPAPERS.join("|")}`;
   }
   if (body.size !== undefined && !(typeof body.size === "string" && SIZE.test(body.size))) return "size must look like 1920x1080";
   if (body.duration !== undefined && !isNumberBetween(body.duration, 1, 180)) return "duration must be 1–180 seconds";

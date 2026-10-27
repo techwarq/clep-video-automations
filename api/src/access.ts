@@ -81,3 +81,19 @@ export async function findSession(env: Env, token: string): Promise<SessionUser 
 
 export const revokeSession = async (env: Env, token: string) =>
   db(env)`UPDATE sessions SET revoked_at = now() WHERE token_hash = ${await sha256(token)} AND revoked_at IS NULL`;
+
+export const isAdminEmail = (env: Env, email: string) =>
+  (env.ADMIN_EMAILS ?? "").split(",").map((entry) => normalizeEmail(entry)).filter(Boolean).includes(normalizeEmail(email));
+
+export const listMembers = (env: Env) =>
+  db(env)`
+    SELECT u.id, u.email, u.name, u.plan, u.created_at,
+      (SELECT count(*)::int FROM access_keys k WHERE k.user_id = u.id AND k.revoked_at IS NULL) AS keys,
+      (SELECT count(*)::int FROM jobs j WHERE j.user_id = u.id AND NOT (j.input ? 'scan')) AS clips,
+      COALESCE((SELECT sum(l.seconds) FROM usage_ledger l WHERE l.user_id = u.id AND l.kind = 'export'
+                AND l.created_at >= date_trunc('month', now())), 0)::float AS used_seconds,
+      (SELECT max(k.last_used_at) FROM access_keys k WHERE k.user_id = u.id) AS last_active_at
+    FROM users u ORDER BY u.created_at DESC LIMIT 500`;
+
+export const setPlan = async (env: Env, userId: string, plan: string) =>
+  isUuid(userId) && (await db(env)`UPDATE users SET plan = ${plan} WHERE id = ${userId} RETURNING id`).length > 0;

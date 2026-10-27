@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from "hono";
-import { findSession } from "./access";
+import { findSession, isAdminEmail } from "./access";
 import { findKey, touchKey } from "./keys";
 import type { App, Env } from "./types";
 
@@ -21,6 +21,14 @@ export const requireUser: MiddlewareHandler<App> = async (c, next) => {
 export const requireSession: MiddlewareHandler<App> = async (c, next) => {
   const user = await findSession(c.env, bearer(c));
   if (!user) return c.json({ error: "sign in again" }, 401);
+  c.set("session", user);
+  await next();
+};
+
+export const requireAdminSession: MiddlewareHandler<App> = async (c, next) => {
+  const user = await findSession(c.env, bearer(c));
+  if (!user) return c.json({ error: "sign in again" }, 401);
+  if (!isAdminEmail(c.env, user.email)) return c.json({ error: "only Clep admins can open this" }, 403);
   c.set("session", user);
   await next();
 };

@@ -3,14 +3,14 @@ import { secureHeaders } from "hono/secure-headers";
 import { browserCors } from "./browser-access";
 import { sweep } from "./db";
 import { recorderFile } from "./recorder";
-import { adminRoutes, betaAccess, clepApi, internalRoutes, platform, v1 } from "./routes";
+import { adminPanel, adminRoutes, betaAccess, clepApi, internalRoutes, platform, v1 } from "./routes";
 import skill from "./skill.md";
 import type { App, Env } from "./types";
 
 const app = new Hono<App>();
 const SKILL_BASE_URL = "https://api.clep.abstraklabs.com";
 
-const BROWSER_PATHS = ["/v1/*", "/api/reserve", "/api/signin", "/api/session", "/api/signout", "/api/me", "/api/me/*"];
+const BROWSER_PATHS = ["/v1/*", "/api/reserve", "/api/signin", "/api/session", "/api/signout", "/api/me", "/api/me/*", "/api/admin/*"];
 
 app.use("*", secureHeaders());
 for (const path of BROWSER_PATHS) app.use(path, browserCors);
@@ -22,6 +22,7 @@ app.get("/recorder/:file", recorderFile);
 app.route("/v1", v1);
 app.route("/api", betaAccess);
 app.route("/api/me", platform);
+app.route("/api/admin", adminPanel);
 app.route("/api", clepApi);
 app.route("/admin", adminRoutes);
 app.route("/internal", internalRoutes);

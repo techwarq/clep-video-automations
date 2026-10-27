@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import { normalizeEmail, reserveSeat, revokeSession, signIn } from "../access";
+import { isAdminEmail, normalizeEmail, reserveSeat, revokeSession, signIn } from "../access";
 import { bearer } from "../auth";
 import { newReservationEmail } from "../beta-emails";
 import { sendEmail } from "../resend";
@@ -43,13 +43,13 @@ export async function signin(c: Context<App>) {
   const code = typeof body.code === "string" ? body.code.trim() : "";
   if (!email || !ACCESS_CODE.test(code)) return c.json({ error: "email and the 6-digit access code are required" }, 400);
   const result = await signIn(c.env, email, code);
-  if (result.ok) return c.json({ token: result.token, expires_at: result.expiresAt, user: result.user });
+  if (result.ok) return c.json({ token: result.token, expires_at: result.expiresAt, user: result.user, is_admin: isAdminEmail(c.env, result.user.email) });
   return result.reason === "locked"
     ? c.json({ error: "too many wrong codes: try again in 15 minutes" }, 429)
     : c.json({ error: "wrong email or access code" }, 401);
 }
 
-export const session = (c: Context<App>) => c.json({ user: c.get("session") });
+export const session = (c: Context<App>) => c.json({ user: c.get("session"), is_admin: isAdminEmail(c.env, c.get("session").email) });
 
 export async function signout(c: Context<App>) {
   await revokeSession(c.env, bearer(c));

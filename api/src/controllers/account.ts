@@ -1,4 +1,5 @@
 import type { Context } from "hono";
+import { isAdminEmail } from "../access";
 import { kitProblem, loadKit, saveKit, type BrandKit } from "../brand-kit";
 import { getDraft, getJob, listJobs, requeue, videoForJob, wakeVm } from "../db";
 import { listKeys } from "../keys";
@@ -24,7 +25,7 @@ const clipView = async (env: Env, job: Job) => {
 export async function account(c: Context<App>) {
   const user = c.get("session");
   const [usage, keys] = await Promise.all([monthlyUsage(c.env, user.id), listKeys(c.env, user.id)]);
-  return c.json({ user, usage, keys: keys.length, connected: keys.some((k) => k.last_used_at) });
+  return c.json({ user, usage, keys: keys.length, connected: keys.some((k) => k.last_used_at), is_admin: isAdminEmail(c.env, user.email) });
 }
 
 export async function clips(c: Context<App>) {

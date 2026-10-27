@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { requireAdmin, requireInternal, requireSession, requireUser } from "./auth";
+import { requireAdmin, requireAdminSession, requireInternal, requireSession, requireUser } from "./auth";
 import * as admin from "./controllers/admin";
 import * as account from "./controllers/account";
 import * as beta from "./controllers/beta";
@@ -67,6 +67,13 @@ export const platform = new Hono<App>()
   .get("/projects", account.projects)
   .get("/brand", account.brandKit)
   .put("/brand", account.saveBrandKit);
+
+export const adminPanel = new Hono<App>()
+  .use(requireAdminSession)
+  .get("/requests", admin.betaRequests)
+  .post("/requests/:id/approve", admin.approveBeta)
+  .get("/members", admin.members)
+  .patch("/members/:id", admin.changePlan);
 
 // you: users and their access keys
 export const adminRoutes = new Hono<App>()
