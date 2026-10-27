@@ -28,7 +28,7 @@ export async function retry(c: Context<App>) {
   const job = await getJob(c.env, c.req.param("id")!, c.get("auth").userId);
   if (!job) return c.json({ error: "not found" }, 404);
   if (job.status !== "failed") return c.json({ error: `only failed jobs can be retried (this one is ${job.status})` }, 409);
-  const refused = await refuseNewJob(c, job.user_id, job.engine === "clep");
+  const refused = await refuseNewJob(c, c.get("auth"), job.engine === "clep");
   if (refused) return refused;
   const draft = await getDraft(c.env, job.id);
   await requeue(c.env, job, draft);

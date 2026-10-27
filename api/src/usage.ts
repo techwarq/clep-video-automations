@@ -1,7 +1,6 @@
 import { db } from "./db";
+import { limitsOf } from "./plans";
 import type { Env, Plan } from "./types";
-
-export const PLAN_EXPORT_MINUTES: Record<Plan, number> = { free: 3, beta: 10, pro: 30, studio: 60 };
 
 export type Usage = { plan: Plan; used_seconds: number; limit_seconds: number; period_start: string };
 
@@ -15,7 +14,7 @@ export async function monthlyUsage(env: Env, userId: string): Promise<Usage> {
   return {
     plan,
     used_seconds: Math.max(Number(row?.used ?? 0), 0),
-    limit_seconds: PLAN_EXPORT_MINUTES[plan] * 60,
+    limit_seconds: limitsOf(plan).exportMinutes * 60,
     period_start: row?.period_start,
   };
 }

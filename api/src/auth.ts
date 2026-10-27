@@ -1,6 +1,6 @@
 import type { MiddlewareHandler } from "hono";
 import { findSession } from "./access";
-import { findKey, touchKey } from "./db";
+import { findKey, touchKey } from "./keys";
 import type { App, Env } from "./types";
 
 export const bearer = (c: { req: { header: (n: string) => string | undefined } }) =>
@@ -9,8 +9,10 @@ export const bearer = (c: { req: { header: (n: string) => string | undefined } }
 // clients: an access key → the user and the engines it may use.
 // Sent as `Authorization: Bearer <key>`, or as `X-API-Key: <key>` (the Clep plugin's header).
 export const requireUser: MiddlewareHandler<App> = async (c, next) => {
-  const auth = await findKey(c.env, bearer(c) || (c.req.header("X-API-Key") ?? "").trim());
-  if (!auth) return c.json({ error: "unauthorized" }, 401);
+  const found = await findKey(c.env, (bearer(c) || c.req.header("X-API-Key") || "").trim());
+  if (!found) return c.json({ error: "unauthorized: this API key is invalid or was revoked" }, 401);
+  if (found.disabled) return c.json({ error: "unauthorized: this API key is paused; resume it in the Clep dashboard (API Keys)" }, 401);
+  const auth = found.auth;
   c.set("auth", auth);
   c.executionCtx.waitUntil(touchKey(c.env, auth.keyId).catch((e) => console.error("key last used:", e)));
   await next();

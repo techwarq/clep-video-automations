@@ -19,7 +19,7 @@ const resumeUpload = (c: Context<App>, uploadId: string | undefined) => {
 
 export async function start(c: Context<App>) {
   if (!mayClep(c)) return forbidden(c);
-  const refused = await refuseNewJob(c, c.get("auth").userId, true);
+  const refused = await refuseNewJob(c, c.get("auth"), true);
   if (refused) return refused;
   const captureId = crypto.randomUUID();
   const upload = await c.env.VIDEOS.createMultipartUpload(captureKey(c.get("auth").userId, captureId));

@@ -47,6 +47,26 @@ name = "RESERVE_LIMITER"
 namespace_id = "1002"
 simple = { limit = 5, period = 60 }
 
+[[ratelimits]]
+name = "KEY_RATE_FREE"
+namespace_id = "1101"
+simple = { limit = 30, period = 60 }
+
+[[ratelimits]]
+name = "KEY_RATE_BETA"
+namespace_id = "1102"
+simple = { limit = 60, period = 60 }
+
+[[ratelimits]]
+name = "KEY_RATE_PRO"
+namespace_id = "1103"
+simple = { limit = 120, period = 60 }
+
+[[ratelimits]]
+name = "KEY_RATE_STUDIO"
+namespace_id = "1104"
+simple = { limit = 300, period = 60 }
+
 [[rules]]
 type = "Text"
 globs = ["**/*.md", "**/*.py"]

@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 import { ensureVm } from "./gcp";
 import { useLocalDatabaseWhenAsked } from "./local-database";
-import type { Auth, Draft, Engine, Env, Job, JobStatus, Owner, Video } from "./types";
+import type { Draft, Engine, Env, Job, JobStatus, Owner, Video } from "./types";
 
 // Neon over HTTP: one round trip per query, nothing to pool inside the Worker
 export const db = (env: Env) => {
@@ -29,36 +29,6 @@ export const userExists = async (env: Env, userId: string) =>
 export function randomToken(prefix: string): string {
   const raw = new Uint8Array(32); crypto.getRandomValues(raw);
   return prefix + btoa(String.fromCharCode(...raw)).replace(/[+/=]/g, (c) => ({ "+": "-", "/": "_", "=": "" })[c]!);
-}
-
-export async function createKey(env: Env, userId: string, engines: Engine[], label?: string) {
-  const key = randomToken("va_");
-  const [row] = await db(env)`
-    INSERT INTO access_keys (user_id, key_hash, prefix, label, engines)
-    VALUES (${userId}, ${await sha256(key)}, ${key.slice(0, 10)}, ${label ?? null}, ${engines})
-    RETURNING id, prefix, label, engines, created_at`;
-  return { ...row, key };  // the only time the key itself is returned
-}
-
-export const listKeys = async (env: Env, userId: string) =>
-  db(env)`SELECT id, prefix, label, engines, created_at, last_used_at FROM access_keys
-           WHERE user_id = ${userId} AND revoked_at IS NULL ORDER BY created_at DESC`;
-
-export const revokeOwnKey = async (env: Env, userId: string, keyId: string) =>
-  isUuid(keyId) && (await db(env)`UPDATE access_keys SET revoked_at = now()
-                                  WHERE id = ${keyId} AND user_id = ${userId} AND revoked_at IS NULL RETURNING id`).length > 0;
-
-export const touchKey = (env: Env, keyId: string) =>
-  db(env)`UPDATE access_keys SET last_used_at = now()
-          WHERE id = ${keyId} AND (last_used_at IS NULL OR last_used_at < now() - interval '5 minutes')`;
-
-export const revokeKey = async (env: Env, keyId: string) =>
-  isUuid(keyId) && db(env)`UPDATE access_keys SET revoked_at = now() WHERE id = ${keyId}`;
-
-export async function findKey(env: Env, key: string): Promise<Auth | null> {
-  if (!key) return null;
-  const [r] = await db(env)`SELECT id, user_id, engines FROM access_keys WHERE key_hash = ${await sha256(key)} AND revoked_at IS NULL`;
-  return r ? { userId: r.user_id, keyId: r.id, engines: r.engines } : null;
 }
 
 // ---- jobs

@@ -1,14 +1,9 @@
 import type { Context } from "hono";
 import { db } from "./db";
-import type { App } from "./types";
+import { keyUsedSeconds } from "./keys";
+import { limitsOf } from "./plans";
+import type { App, Owner, Plan } from "./types";
 import { hasMinutesLeft, monthlyUsage } from "./usage";
-
-export const MAX_ACTIVE_JOBS = 3;
-
-const activeJobCount = async (c: Context<App>, userId: string) => {
-  const [row] = await db(c.env)`SELECT count(*)::int AS active FROM jobs WHERE user_id = ${userId} AND status IN ('queued', 'running')`;
-  return Number(row?.active ?? 0);
-};
 
 export async function outOfMinutes(c: Context<App>, userId: string) {
   const usage = await monthlyUsage(c.env, userId);
@@ -17,10 +12,21 @@ export async function outOfMinutes(c: Context<App>, userId: string) {
 }
 
 export async function tooManyActiveJobs(c: Context<App>, userId: string) {
-  if ((await activeJobCount(c, userId)) < MAX_ACTIVE_JOBS) return null;
-  return c.json({ error: `you already have ${MAX_ACTIVE_JOBS} videos queued or rendering: wait for one to finish` }, 429);
+  const [row] = await db(c.env)`
+    SELECT users.plan, (SELECT count(*)::int FROM jobs WHERE user_id = users.id AND status IN ('queued', 'running')) AS active
+    FROM users WHERE id = ${userId}`;
+  const allowed = limitsOf(row?.plan as Plan).activeJobs;
+  if (Number(row?.active ?? 0) < allowed) return null;
+  return c.json({ error: `your ${row?.plan ?? "free"} plan runs ${allowed} video${allowed === 1 ? "" : "s"} at a time: wait for one to finish` }, 429);
 }
 
-export async function refuseNewJob(c: Context<App>, userId: string, metered: boolean) {
-  return (await tooManyActiveJobs(c, userId)) ?? (metered ? await outOfMinutes(c, userId) : null);
+async function keyOutOfMinutes(c: Context<App>, owner: Owner) {
+  const limit = owner.keyId && c.get("auth")?.keyId === owner.keyId ? c.get("auth").minuteLimit : null;
+  if (!owner.keyId || !limit) return null;
+  if ((await keyUsedSeconds(c.env, owner.keyId)) < limit * 60) return null;
+  return c.json({ error: `this API key's limit of ${limit} export minute${limit === 1 ? "" : "s"} this month is used: raise it in the Clep dashboard (API Keys)` }, 402);
+}
+
+export async function refuseNewJob(c: Context<App>, owner: Owner, metered: boolean) {
+  return (await tooManyActiveJobs(c, owner.userId)) ?? (metered ? (await keyOutOfMinutes(c, owner)) ?? (await outOfMinutes(c, owner.userId)) : null);
 }

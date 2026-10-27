@@ -1,13 +1,12 @@
 import type { Context } from "hono";
 import { kitProblem, loadKit, saveKit, type BrandKit } from "../brand-kit";
-import { createKey, getDraft, getJob, listJobs, listKeys, requeue, revokeOwnKey, videoForJob, wakeVm } from "../db";
+import { getDraft, getJob, listJobs, requeue, videoForJob, wakeVm } from "../db";
+import { listKeys } from "../keys";
 import { refuseNewJob } from "../job-limits";
 import { listProjects } from "../projects";
 import { startJob } from "../start-job";
 import type { App, Env, Job } from "../types";
 import { monthlyUsage } from "../usage";
-
-const MAX_ACTIVE_KEYS = 10;
 
 const clipView = async (env: Env, job: Job) => {
   const input = (job.input ?? {}) as Record<string, unknown>;
@@ -26,23 +25,6 @@ export async function account(c: Context<App>) {
   const user = c.get("session");
   const [usage, keys] = await Promise.all([monthlyUsage(c.env, user.id), listKeys(c.env, user.id)]);
   return c.json({ user, usage, keys: keys.length, connected: keys.some((k) => k.last_used_at) });
-}
-
-export const keys = async (c: Context<App>) => c.json({ keys: await listKeys(c.env, c.get("session").id) });
-
-export async function addKey(c: Context<App>) {
-  const user = c.get("session");
-  const body = await c.req.json<{ label?: unknown }>().catch(() => ({} as { label?: unknown }));
-  const label = typeof body.label === "string" && body.label.trim() ? body.label.trim().slice(0, 60) : "coding agent";
-  if ((await listKeys(c.env, user.id)).length >= MAX_ACTIVE_KEYS) {
-    return c.json({ error: `at most ${MAX_ACTIVE_KEYS} active keys: revoke one first` }, 409);
-  }
-  return c.json(await createKey(c.env, user.id, ["clep"], label), 201);
-}
-
-export async function dropKey(c: Context<App>) {
-  const revoked = await revokeOwnKey(c.env, c.get("session").id, c.req.param("id")!);
-  return revoked ? c.json({ ok: true }) : c.json({ error: "no such key" }, 404);
 }
 
 export async function clips(c: Context<App>) {
@@ -77,7 +59,7 @@ export async function retryClip(c: Context<App>) {
   const job = await getJob(c.env, c.req.param("id")!, user.id);
   if (!job || job.engine !== "clep") return c.json({ error: "not found" }, 404);
   if (job.status !== "failed") return c.json({ error: `only failed clips can be retried (this one is ${job.status})` }, 409);
-  const refused = await refuseNewJob(c, user.id, true);
+  const refused = await refuseNewJob(c, { userId: user.id, keyId: null }, true);
   if (refused) return refused;
   await requeue(c.env, job, await getDraft(c.env, job.id));
   c.executionCtx.waitUntil(wakeVm(c.env));

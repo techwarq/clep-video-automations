@@ -17,13 +17,18 @@ export type Env = {
   BROWSER_ORIGINS: string;
   SIGNIN_LIMITER: RateLimit;
   RESERVE_LIMITER: RateLimit;
+  KEY_RATE_FREE: RateLimit;
+  KEY_RATE_BETA: RateLimit;
+  KEY_RATE_PRO: RateLimit;
+  KEY_RATE_STUDIO: RateLimit;
 };
 
 export type Engine = "reels" | "motion" | "clep";
 export const ENGINES: Engine[] = ["reels", "motion", "clep"];
 export type JobStatus = "queued" | "running" | "done" | "failed";
 
-export type Auth = { userId: string; keyId: string; engines: Engine[] };
+export type Plan = "free" | "beta" | "pro" | "studio";
+export type Auth = { userId: string; keyId: string; engines: Engine[]; plan: Plan; minuteLimit: number | null };
 export type Owner = { userId: string; keyId: string | null };
 export type SessionUser = { id: string; email: string; name: string | null };
 export type App = { Bindings: Env; Variables: { auth: Auth; session: SessionUser } };
@@ -34,7 +39,6 @@ export type Job = {
   attempts: number; error: string | null; cost_usd: string; result: unknown | null; created_at: string; updated_at: string;
   stage: string | null; progress: number; export_seconds: string | null;
 };
-export type Plan = "free" | "beta" | "pro" | "studio";
 export type Video = { id: string; job_id: string; user_id: string; r2_key: string; bytes: string; created_at: string };
 export type Draft = { job_id: string; user_id: string; r2_key: string; bytes: string; updated_at: string };
 

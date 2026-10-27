@@ -5,8 +5,8 @@ One backend for every video engine.
 ```
 client ──► api/  (Cloudflare Worker)          vm/  (Google VM, Python)
  access    routes → controllers                pulls jobs from the queue
- key       Neon Postgres (users,   ── Queue ─► router → services/{reels,motion}
-              drafts, videos)                  runs engines/{reels,motion}
+ key       Neon Postgres (users,   ── Queue ─► router → services/{reels,motion,clep}
+              drafts, videos)                  runs engines/{…}
            R2 videos/ + drafts/ ◄── upload ─── film source (draft) + mp4
            /internal/* ◄──── status + cost ───
 ```
@@ -17,6 +17,7 @@ client ──► api/  (Cloudflare Worker)          vm/  (Google VM, Python)
 | `vm/` | Worker process on the Google VM: pulls jobs, runs the right engine, uploads, reports back |
 | `engines/reels` | the reels engine (from `allore-pipelines/pipeline`) |
 | `engines/motion` | the launch-film engine (from `allore-pipelines/pipeline_motion`) |
+| `engines/clep` | the product-clip engine: records a live page and edits it (from `clep-service/clep_service`) |
 | `deploy/` | `create-vm.sh` (once) + `startup.sh` (every boot: pull image → run worker → power off when idle) |
 | `Dockerfile` | engine image: `vm/` + `engines/`, Chromium, ffmpeg |
 | `.github/workflows/` | CI/CD: `deploy-api.yml` → Cloudflare, `deploy-engine.yml` → Google VM |
@@ -40,6 +41,7 @@ Project `gentle-cell-80493280`: branch `production` for the deployed API, branch
 |---|---|---|
 | `POST /v1/reels` `{prompt, style?, tts?}` | access key | new reels job → `{id}` |
 | `POST /v1/motion` `{url, request, seconds?}` | access key | new launch-film job → `{id}` |
+| `POST /v1/clep` `{prompt}` or `{url, name?, …}` | access key | new product-clip job → `{id}` (fields below) |
 | `GET /v1/jobs`, `GET /v1/jobs/:id` | access key | your jobs: status, attempts, cost, video, has_draft |
 | `POST /v1/jobs/:id/retry` | access key | re-run a failed job; with a draft it only re-renders |
 | `GET /v1/videos`, `GET /v1/videos/:id` | access key | your videos; the second streams the mp4 |
@@ -47,6 +49,37 @@ Project `gentle-cell-80493280`: branch `production` for the deployed API, branch
 | `POST /admin/users/:id/keys` `{engines?, label?}` | `ADMIN_KEY` | new access key (returned once) |
 | `DELETE /admin/keys/:id` | `ADMIN_KEY` | revoke a key |
 | `/internal/*` | `INTERNAL_KEY` | the VM: job status + cost, video and draft uploads, draft download |
+
+`POST /v1/clep` takes `prompt` (natural language, e.g. `"walkthrough of https://acme.ai showing hero, pricing, 10s calm"`)
+or `url`, plus any of: `name` (a `data-clep` feature to demo), `kind` (`tour|feature|mockup|launch`), `query`,
+`steps` (multi-step plan, see `engines/clep/README.md`), `sections` (list), `movement` (`calm|standard|dynamic`),
+`captions` (bool), `style`, `duration`, `fps`, `quality` (`720p|1080p`), `aspect`, `size` (`WxH`), `bg`.
+`url` alone records a walkthrough of the page. Clep calls no model: cost is always $0, and a retry records again.
+
+### The Clep plugin (`/api`)
+
+The Clep Claude Code plugin (`techwarq/clep-plugin`, `bin/clep`) talks to its own paths over the same jobs, keys
+and storage. Its key goes in `X-API-Key` (`Authorization: Bearer` works too) and must include the `clep` engine.
+
+| route | does |
+|---|---|
+| `GET /api/health` (no key) | `{ok: true}` |
+| `GET /api/features?url=` | lists the page's `data-clep` features: a short job on the renderer, the request waits ≤ 55 s (504 while the VM is still starting) |
+| `POST /api/clips` (same body as `/v1/clep`) | new clip job → `{job_id}` |
+| `GET /api/jobs`, `GET /api/jobs/:id` | clips with status `queued → recording → done \| error` and `out` once done |
+| `GET /api/jobs/:id/video` | the mp4 (`out`) |
+
+**Local end to end** (API + renderer on this machine; the app being clipped can be on localhost):
+
+```bash
+bash dev/local.sh                               # first run sets up dev/venv; Ctrl-C stops both
+node api/scripts/dev-signin.mjs you@example.com # an approved beta user + its sign-in code
+cd ~/clep && npm run dev:local                  # the dashboard on :3000: sign in, API Keys → Create key
+export CLEP_API_URL=http://127.0.0.1:8799 CLEP_API_KEY=<the key you created>
+```
+
+It uses `api/.dev.vars` (Neon dev branch), wrangler's local R2, and `JOB_SOURCE=api` on the worker: jobs come
+from `POST /internal/jobs/next` on the local API, never from the Cloudflare queue.
 
 A user only ever sees their own jobs and videos; a key used for an engine it isn't allowed gets `403`.
 
@@ -59,7 +92,7 @@ A user only ever sees their own jobs and videos; a key used for an engine it isn
 3. It uploads the mp4 (`videos` row) and marks the job `done` with the cost, or `failed` with the error and
    the cost so far. Either way, whatever film the model wrote is saved as the job's draft.
 4. A retry of a failed job with a draft restores the film and only renders it: no second model bill.
-   Reels keeps no draft yet, so a reels retry runs again in full.
+   Reels and clep keep no draft, so their retries run again in full.
 
 ## Adding an engine
 

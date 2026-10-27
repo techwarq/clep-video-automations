@@ -8,14 +8,16 @@ import * as clep from "./controllers/clep";
 import * as engines from "./controllers/engines";
 import * as internal from "./controllers/internal";
 import * as jobs from "./controllers/jobs";
+import * as keys from "./controllers/keys";
 import * as projects from "./controllers/projects";
 import * as videos from "./controllers/videos";
-import { limitPerVisitor } from "./rate-limit";
+import { limitPerKey, limitPerVisitor } from "./rate-limit";
 import type { App } from "./types";
 
 // clients, with an access key
 export const v1 = new Hono<App>()
   .use(requireUser)
+  .use(limitPerKey)
   // the key matched (requireUser) → who it belongs to and what it may make; the dashboard checks a key with this
   .get("/me", (c) => c.json({ user_id: c.get("auth").userId, engines: c.get("auth").engines }))
   .post("/reels", engines.create("reels"))
@@ -32,6 +34,7 @@ export const v1 = new Hono<App>()
 export const clepApi = new Hono<App>()
   .get("/health", clep.health)
   .use(requireUser)
+  .use(limitPerKey)
   .get("/features", clep.features)
   .post("/captures", captures.start)
   .put("/captures/:id/parts/:n", captures.part)
@@ -51,9 +54,11 @@ export const betaAccess = new Hono<App>()
 export const platform = new Hono<App>()
   .use(requireSession)
   .get("/", account.account)
-  .get("/keys", account.keys)
-  .post("/keys", account.addKey)
-  .delete("/keys/:id", account.dropKey)
+  .get("/keys", keys.list)
+  .post("/keys", keys.create)
+  .patch("/keys/:id", keys.update)
+  .post("/keys/:id/rotate", keys.rotate)
+  .delete("/keys/:id", keys.revoke)
   .get("/clips", account.clips)
   .get("/clips/:id", account.clip)
   .post("/clips", account.startClip)

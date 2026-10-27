@@ -1,7 +1,8 @@
 import type { Context } from "hono";
 import { approveBetaRequest, listBetaRequests } from "../access";
 import { accessCodeEmail } from "../beta-emails";
-import { createKey, createUser, revokeKey, userExists } from "../db";
+import { createUser, userExists } from "../db";
+import { issueKey, revokeKey } from "../keys";
 import { ensureVm, vmStatus } from "../gcp";
 import { sendEmail } from "../resend";
 import { ENGINES, type App, type BetaRequest, type Engine } from "../types";
@@ -23,7 +24,7 @@ export async function addKey(c: Context<App>) {
   const engines = b.engines ?? ENGINES;
   if (!engines.length || engines.some((e) => !ENGINES.includes(e))) return c.json({ error: `engines must be from ${ENGINES}` }, 400);
   if (!(await userExists(c.env, c.req.param("id")!))) return c.json({ error: "no such user" }, 404);
-  return c.json(await createKey(c.env, c.req.param("id")!, engines, b.label), 201);
+  return c.json(await issueKey(c.env, c.req.param("id")!, engines, b.label ?? "admin", null, Number.MAX_SAFE_INTEGER), 201);
 }
 
 // DELETE /admin/keys/:id
