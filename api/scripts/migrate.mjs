@@ -2,9 +2,11 @@
 //   DATABASE_URL=… node scripts/migrate.mjs      (npm run migrate reads ../.env.local)
 import { neon } from "@neondatabase/serverless";
 import { readdirSync, readFileSync } from "node:fs";
+import { useLocalDatabaseWhenAsked } from "../src/local-database.ts";
 
 const url = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
 if (!url) throw new Error("DATABASE_URL is not set");
+useLocalDatabaseWhenAsked(url);
 const sql = neon(url);
 const dir = new URL("../migrations/", import.meta.url);
 

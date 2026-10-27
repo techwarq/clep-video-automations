@@ -1,5 +1,6 @@
 import type { Context } from "hono";
-import { claimJob, getJob, saveDraft, saveVideo, updateJob, type JobUpdate } from "../db";
+import { claimJob, getJob, nextJob, saveDraft, saveVideo, setProgress, updateJob, type JobUpdate } from "../db";
+import { recordExport } from "../usage";
 import type { App } from "../types";
 
 // POST /internal/jobs/:id/claim → 200 the job is now running and this worker owns it · 409 skip it (gone, taken, finished)
@@ -8,11 +9,32 @@ export async function claim(c: Context<App>) {
   return job ? c.json({ ok: true, attempts: job.attempts }) : c.json({ error: "job is not queued" }, 409);
 }
 
-// PATCH /internal/jobs/:id  { status: done | failed, error?, cost_usd? }
+// POST /internal/jobs/next → 200 the oldest queued job, now running for this worker · 204 nothing queued.
+// Local dev only (JOB_SOURCE=api on the worker); production workers pull the Cloudflare queue.
+export async function next(c: Context<App>) {
+  const j = await nextJob(c.env);
+  if (!j) return c.body(null, 204);
+  return c.json({ id: j.id, user_id: j.user_id, engine: j.engine, input: j.input,
+    ...(j.draft_key ? { draft_key: j.draft_key } : {}) });
+}
+
+// PATCH /internal/jobs/:id  { status: done | failed, error?, cost_usd?, result? }
 export async function update(c: Context<App>) {
-  const u = await c.req.json<JobUpdate>();
+  const u = await c.req.json<JobUpdate>().catch(() => ({} as JobUpdate));
   if (u.status !== "done" && u.status !== "failed") return c.json({ error: "status must be done or failed (claim to start)" }, 400);
-  await updateJob(c.env, c.req.param("id")!, u);
+  const updated = await updateJob(c.env, c.req.param("id")!, u);
+  if (updated.length && u.status === "done" && typeof u.export_seconds === "number" && u.export_seconds > 0) {
+    await recordExport(c.env, c.req.param("id")!, u.export_seconds);
+  }
+  return c.json({ ok: true });
+}
+
+export async function progress(c: Context<App>) {
+  const body = await c.req.json<{ stage?: unknown; progress?: unknown }>().catch(() => ({} as { stage?: unknown; progress?: unknown }));
+  const stage = typeof body.stage === "string" ? body.stage.slice(0, 40) : "";
+  const percent = Math.round(Number(body.progress ?? 0));
+  if (!stage || !Number.isFinite(percent) || percent < 0 || percent > 100) return c.json({ error: "stage and progress 0–100 are required" }, 400);
+  await setProgress(c.env, c.req.param("id")!, stage, percent);
   return c.json({ ok: true });
 }
 

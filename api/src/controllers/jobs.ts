@@ -1,11 +1,13 @@
 import type { Context } from "hono";
 import { getDraft, getJob, listJobs, requeue, videoForJob, wakeVm } from "../db";
+import { refuseNewJob } from "../job-limits";
 import type { App, Env, Job } from "../types";
 
 async function view(env: Env, j: Job) {
   const [video, draft] = await Promise.all([videoForJob(env, j.id), getDraft(env, j.id)]);
   return {
-    id: j.id, engine: j.engine, input: j.input, status: j.status, attempts: j.attempts, error: j.error, cost_usd: Number(j.cost_usd),
+    id: j.id, engine: j.engine, input: j.input, status: j.status, stage: j.stage, progress: j.progress,
+    attempts: j.attempts, error: j.error, cost_usd: Number(j.cost_usd),
     video: video ? { id: video.id, url: `/v1/videos/${video.id}` } : null, has_draft: !!draft,
     created_at: j.created_at, updated_at: j.updated_at,
   };
@@ -26,6 +28,8 @@ export async function retry(c: Context<App>) {
   const job = await getJob(c.env, c.req.param("id")!, c.get("auth").userId);
   if (!job) return c.json({ error: "not found" }, 404);
   if (job.status !== "failed") return c.json({ error: `only failed jobs can be retried (this one is ${job.status})` }, 409);
+  const refused = await refuseNewJob(c, job.user_id, job.engine === "clep");
+  if (refused) return refused;
   const draft = await getDraft(c.env, job.id);
   await requeue(c.env, job, draft);
   c.executionCtx.waitUntil(wakeVm(c.env));

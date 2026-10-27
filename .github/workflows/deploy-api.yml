@@ -3,7 +3,7 @@ name: deploy api (Cloudflare)
 on:
   push:
     branches: [main]
-    paths: ["api/**", ".github/workflows/deploy-api.yml"]
+    paths: ["api/**", "engines/clep/capture/**", ".github/workflows/deploy-api.yml"]
   workflow_dispatch:
 
 jobs:

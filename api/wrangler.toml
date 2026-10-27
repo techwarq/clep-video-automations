@@ -21,6 +21,11 @@ queue = "video-jobs"
 GCP_PROJECT = "doctosheet-be"
 GCP_ZONE = "us-east4-a"
 GCP_VM = "video-worker"
+EMAIL_FROM = "Clep <sonali@abstraklabs.com>"
+ADMIN_EMAIL = "sonali@abstraklabs.com"
+PLATFORM_URL = "https://clep.abstraklabs.com"
+API_URL = "https://api.clep.abstraklabs.com"
+BROWSER_ORIGINS = "https://clep.abstraklabs.com,https://clep-sage.vercel.app,http://localhost:3000"
 
 [[kv_namespaces]]
 binding = "STATE"            # "pending" flag: set when a job is queued, cleared once none are left
@@ -30,4 +35,19 @@ id = "7c33f092418249cf9d442e96e7dfe27b"
 crons = ["* * * * *"]      # pending flag set → make sure the VM is up; reads Neon only while work is pending
 
 # Database: Neon Postgres (project gentle-cell-80493280), migrations via `npm run migrate`.
-# Secrets (npm run secrets): ADMIN_KEY, INTERNAL_KEY, DATABASE_URL, GCP_SA_KEY
+# Secrets (npm run secrets): ADMIN_KEY, INTERNAL_KEY, DATABASE_URL, GCP_SA_KEY, RESEND_API_KEY
+
+[[ratelimits]]
+name = "SIGNIN_LIMITER"
+namespace_id = "1001"
+simple = { limit = 10, period = 60 }
+
+[[ratelimits]]
+name = "RESERVE_LIMITER"
+namespace_id = "1002"
+simple = { limit = 5, period = 60 }
+
+[[rules]]
+type = "Text"
+globs = ["**/*.md", "**/*.py"]
+fallthrough = true

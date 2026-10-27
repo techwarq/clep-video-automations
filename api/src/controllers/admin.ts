@@ -1,7 +1,10 @@
 import type { Context } from "hono";
+import { approveBetaRequest, listBetaRequests } from "../access";
+import { accessCodeEmail } from "../beta-emails";
 import { createKey, createUser, revokeKey, userExists } from "../db";
 import { ensureVm, vmStatus } from "../gcp";
-import { ENGINES, type App, type Engine } from "../types";
+import { sendEmail } from "../resend";
+import { ENGINES, type App, type BetaRequest, type Engine } from "../types";
 
 // POST /admin/users  { email, name? }
 export async function addUser(c: Context<App>) {
@@ -14,7 +17,7 @@ export async function addUser(c: Context<App>) {
   }
 }
 
-// POST /admin/users/:id/keys  { engines?: ["reels","motion"], label? } → the key is shown once
+// POST /admin/users/:id/keys  { engines?: ["reels","motion","clep"], label? } → the key is shown once
 export async function addKey(c: Context<App>) {
   const b = await c.req.json<{ engines?: Engine[]; label?: string }>().catch(() => ({} as { engines?: Engine[]; label?: string }));
   const engines = b.engines ?? ENGINES;
@@ -32,3 +35,20 @@ export async function dropKey(c: Context<App>) {
 // GET /admin/vm → { status } · POST /admin/vm/start → start it if stopped
 export const vm = async (c: Context<App>) => c.json({ vm: c.env.GCP_VM, status: await vmStatus(c.env) });
 export const vmStart = async (c: Context<App>) => c.json({ vm: c.env.GCP_VM, result: await ensureVm(c.env) });
+
+const BETA_STATUSES = ["pending", "approved"];
+
+const withoutSecrets = ({ access_code_hash, failed_signins, locked_until, ...request }: BetaRequest) => request;
+
+export async function betaRequests(c: Context<App>) {
+  const status = c.req.query("status");
+  if (status && !BETA_STATUSES.includes(status)) return c.json({ error: `status must be one of ${BETA_STATUSES}` }, 400);
+  return c.json({ requests: (await listBetaRequests(c.env, status)).map(withoutSecrets) });
+}
+
+export async function approveBeta(c: Context<App>) {
+  const approved = await approveBetaRequest(c.env, c.req.param("id")!);
+  if (!approved) return c.json({ error: "no such beta request" }, 404);
+  const email = await sendEmail(c.env, accessCodeEmail(c.env, approved.request, approved.accessCode));
+  return c.json({ request: withoutSecrets(approved.request), access_code: approved.accessCode, email });
+}

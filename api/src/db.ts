@@ -1,12 +1,16 @@
 import { neon } from "@neondatabase/serverless";
 import { ensureVm } from "./gcp";
-import type { Auth, Draft, Engine, Env, Job, JobStatus, Video } from "./types";
+import { useLocalDatabaseWhenAsked } from "./local-database";
+import type { Auth, Draft, Engine, Env, Job, JobStatus, Owner, Video } from "./types";
 
 // Neon over HTTP: one round trip per query, nothing to pool inside the Worker
-const db = (env: Env) => neon(env.DATABASE_URL);
+export const db = (env: Env) => {
+  useLocalDatabaseWhenAsked(env.DATABASE_URL);
+  return neon(env.DATABASE_URL);
+};
 
 // a malformed id is "not found", not a Postgres error
-const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+export const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
 export async function sha256(s: string): Promise<string> {
   const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
@@ -22,15 +26,31 @@ export async function createUser(env: Env, email: string, name?: string) {
 export const userExists = async (env: Env, userId: string) =>
   isUuid(userId) && (await db(env)`SELECT 1 FROM users WHERE id = ${userId}`).length > 0;
 
-export async function createKey(env: Env, userId: string, engines: Engine[], label?: string) {
+export function randomToken(prefix: string): string {
   const raw = new Uint8Array(32); crypto.getRandomValues(raw);
-  const key = "va_" + btoa(String.fromCharCode(...raw)).replace(/[+/=]/g, (c) => ({ "+": "-", "/": "_", "=": "" })[c]!);
+  return prefix + btoa(String.fromCharCode(...raw)).replace(/[+/=]/g, (c) => ({ "+": "-", "/": "_", "=": "" })[c]!);
+}
+
+export async function createKey(env: Env, userId: string, engines: Engine[], label?: string) {
+  const key = randomToken("va_");
   const [row] = await db(env)`
     INSERT INTO access_keys (user_id, key_hash, prefix, label, engines)
     VALUES (${userId}, ${await sha256(key)}, ${key.slice(0, 10)}, ${label ?? null}, ${engines})
     RETURNING id, prefix, label, engines, created_at`;
   return { ...row, key };  // the only time the key itself is returned
 }
+
+export const listKeys = async (env: Env, userId: string) =>
+  db(env)`SELECT id, prefix, label, engines, created_at, last_used_at FROM access_keys
+           WHERE user_id = ${userId} AND revoked_at IS NULL ORDER BY created_at DESC`;
+
+export const revokeOwnKey = async (env: Env, userId: string, keyId: string) =>
+  isUuid(keyId) && (await db(env)`UPDATE access_keys SET revoked_at = now()
+                                  WHERE id = ${keyId} AND user_id = ${userId} AND revoked_at IS NULL RETURNING id`).length > 0;
+
+export const touchKey = (env: Env, keyId: string) =>
+  db(env)`UPDATE access_keys SET last_used_at = now()
+          WHERE id = ${keyId} AND (last_used_at IS NULL OR last_used_at < now() - interval '5 minutes')`;
 
 export const revokeKey = async (env: Env, keyId: string) =>
   isUuid(keyId) && db(env)`UPDATE access_keys SET revoked_at = now() WHERE id = ${keyId}`;
@@ -67,9 +87,9 @@ export async function sweep(env: Env, scheduledTime = Date.now()) {
   await ensureVm(env).catch((e) => console.error("sweep VM:", e));
 }
 
-export async function createJob(env: Env, auth: Auth, engine: Engine, input: unknown): Promise<Job> {
+export async function createJob(env: Env, owner: Owner, engine: Engine, input: unknown): Promise<Job> {
   const [job] = await db(env)`
-    INSERT INTO jobs (user_id, key_id, engine, input) VALUES (${auth.userId}, ${auth.keyId}, ${engine}, ${JSON.stringify(input)}::jsonb)
+    INSERT INTO jobs (user_id, key_id, engine, input) VALUES (${owner.userId}, ${owner.keyId}, ${engine}, ${JSON.stringify(input)}::jsonb)
     RETURNING *` as Job[];
   try {
     await env.JOBS.send({ id: job.id, user_id: job.user_id, engine, input });
@@ -89,17 +109,22 @@ export async function getJob(env: Env, jobId: string, userId?: string): Promise<
   return (rows[0] as Job) ?? null;
 }
 
-export const listJobs = async (env: Env, userId: string, limit = 50) =>
-  (await db(env)`SELECT * FROM jobs WHERE user_id = ${userId} ORDER BY created_at DESC LIMIT ${limit}`) as Job[];
+// a user's jobs, newest first; feature scans (input.scan) are lookups, not videos, so they are left out
+export const listJobs = async (env: Env, userId: string, limit = 50, engine?: Engine) =>
+  (engine
+    ? await db(env)`SELECT * FROM jobs WHERE user_id = ${userId} AND engine = ${engine} AND NOT (input ? 'scan')
+                    ORDER BY created_at DESC LIMIT ${limit}`
+    : await db(env)`SELECT * FROM jobs WHERE user_id = ${userId} AND NOT (input ? 'scan')
+                    ORDER BY created_at DESC LIMIT ${limit}`) as Job[];
 
-export type JobUpdate = { status: "done" | "failed"; error?: string; cost_usd?: number };
+export type JobUpdate = { status: "done" | "failed"; error?: string; cost_usd?: number; result?: unknown; export_seconds?: number };
 
 // The worker takes a job: queued → running, atomically. Anything else (gone, already taken, done, failed) → null,
 // and the worker skips it — so a stray or duplicate message can never start a second run.
 export async function claimJob(env: Env, jobId: string): Promise<Job | null> {
   if (!isUuid(jobId)) return null;
   const [j] = await db(env)`
-    UPDATE jobs SET status = 'running', attempts = attempts + 1, error = NULL, updated_at = now()
+    UPDATE jobs SET status = 'running', attempts = attempts + 1, error = NULL, stage = 'starting', progress = 0, updated_at = now()
     WHERE id = ${jobId} AND status = 'queued' RETURNING *`;
   return (j as Job) ?? null;
 }
@@ -111,11 +136,28 @@ export const updateJob = (env: Env, jobId: string, u: JobUpdate) =>
     UPDATE jobs SET status = ${u.status},
       error = ${u.status === "failed" ? u.error ?? "failed" : null},
       cost_usd = cost_usd + ${u.cost_usd ?? 0},
+      result = ${u.result === undefined ? null : JSON.stringify(u.result)}::jsonb,
+      export_seconds = ${u.status === "done" ? u.export_seconds ?? null : null},
+      stage = ${u.status}, progress = ${u.status === "done" ? 100 : 0},
       updated_at = now()
-    WHERE id = ${jobId} AND status = 'running'`;
+    WHERE id = ${jobId} AND status = 'running' RETURNING id`;
+
+export const setProgress = (env: Env, jobId: string, stage: string, progress: number) =>
+  db(env)`UPDATE jobs SET stage = ${stage}, progress = ${progress}, updated_at = now()
+          WHERE id = ${jobId} AND status = 'running'`;
+
+// Local dev only (a `wrangler dev` queue never reaches the worker): hand out the oldest queued job, claimed in the
+// same statement (queued → running), so two local workers can never take the same one.
+export async function nextJob(env: Env): Promise<(Job & { draft_key: string | null }) | null> {
+  const [j] = await db(env)`
+    UPDATE jobs SET status = 'running', attempts = attempts + 1, error = NULL, stage = 'starting', progress = 0, updated_at = now()
+    WHERE id = (SELECT id FROM jobs WHERE status = 'queued' ORDER BY created_at LIMIT 1 FOR UPDATE SKIP LOCKED)
+    RETURNING *, (SELECT r2_key FROM drafts WHERE drafts.job_id = jobs.id) AS draft_key`;
+  return (j as Job & { draft_key: string | null }) ?? null;
+}
 
 export async function requeue(env: Env, job: Job, draft: Draft | null) {
-  await db(env)`UPDATE jobs SET status = 'queued', error = NULL, updated_at = now() WHERE id = ${job.id}`;
+  await db(env)`UPDATE jobs SET status = 'queued', error = NULL, stage = NULL, progress = 0, updated_at = now() WHERE id = ${job.id}`;
   await env.JOBS.send({ id: job.id, user_id: job.user_id, engine: job.engine, input: job.input,
     ...(draft ? { draft_key: draft.r2_key } : {}) });
 }
