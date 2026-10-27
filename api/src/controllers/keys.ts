@@ -1,6 +1,6 @@
 import type { Context } from "hono";
 import { EXPIRY_DAYS, issueKey, listKeys, revokeOwnKey, rotateKey, updateKey, type KeySettings } from "../keys";
-import { limitsOf } from "../plans";
+import { limitsOf, MAX_ACTIVE_KEYS } from "../plans";
 import type { App, Plan } from "../types";
 import { monthlyUsage } from "../usage";
 
@@ -41,7 +41,7 @@ export async function list(c: Context<App>) {
   const limits = limitsOf(usage.plan);
   return c.json({
     keys: keys.map(view),
-    plan: { name: usage.plan, keys: limits.keys, requests_per_minute: limits.requestsPerMinute, active_jobs: limits.activeJobs, export_minutes: limits.exportMinutes },
+    plan: { name: usage.plan, requests_per_minute: limits.requestsPerMinute, active_jobs: limits.activeJobs, export_minutes: limits.exportMinutes },
   });
 }
 
@@ -49,10 +49,8 @@ export async function create(c: Context<App>) {
   const user = c.get("session");
   const parsed = parse(await readBody(c));
   if (typeof parsed === "string") return c.json({ error: parsed }, 400);
-  const plan = (await monthlyUsage(c.env, user.id)).plan as Plan;
-  const cap = limitsOf(plan).keys;
-  const created = await issueKey(c.env, user.id, ["clep"], parsed.settings.label ?? DEFAULT_LABEL, parsed.expiresInDays, cap);
-  if (!created) return c.json({ error: `your ${plan} plan allows ${cap} active keys: revoke one first` }, 409);
+  const created = await issueKey(c.env, user.id, ["clep"], parsed.settings.label ?? DEFAULT_LABEL, parsed.expiresInDays, MAX_ACTIVE_KEYS);
+  if (!created) return c.json({ error: `you have ${MAX_ACTIVE_KEYS} active keys: revoke some you no longer use first` }, 409);
   return c.json({ ...view(created), key: created.key }, 201);
 }
 
