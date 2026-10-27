@@ -29,7 +29,7 @@ export const ENGINES: Engine[] = ["reels", "motion", "clep"];
 export type JobStatus = "queued" | "running" | "done" | "failed";
 
 export type Plan = "free" | "beta" | "pro" | "studio";
-export type Auth = { userId: string; keyId: string; engines: Engine[]; plan: Plan; minuteLimit: number | null };
+export type Auth = { userId: string; keyId: string; engines: Engine[]; plan: Plan };
 export type Owner = { userId: string; keyId: string | null };
 export type SessionUser = { id: string; email: string; name: string | null };
 export type App = { Bindings: Env; Variables: { auth: Auth; session: SessionUser } };

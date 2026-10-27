@@ -12,6 +12,7 @@ export const requireUser: MiddlewareHandler<App> = async (c, next) => {
   const found = await findKey(c.env, (bearer(c) || c.req.header("X-API-Key") || "").trim());
   if (!found) return c.json({ error: "unauthorized: this API key is invalid or was revoked" }, 401);
   if (found.disabled) return c.json({ error: "unauthorized: this API key is paused; resume it in the Clep dashboard (API Keys)" }, 401);
+  if (found.expiredAt) return c.json({ error: `unauthorized: this API key expired on ${new Date(found.expiredAt).toISOString().slice(0, 10)}; regenerate it in the Clep dashboard (API Keys)` }, 401);
   const auth = found.auth;
   c.set("auth", auth);
   c.executionCtx.waitUntil(touchKey(c.env, auth.keyId).catch((e) => console.error("key last used:", e)));

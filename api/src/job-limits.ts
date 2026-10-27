@@ -1,6 +1,5 @@
 import type { Context } from "hono";
 import { db } from "./db";
-import { keyUsedSeconds } from "./keys";
 import { limitsOf } from "./plans";
 import type { App, Owner, Plan } from "./types";
 import { hasMinutesLeft, monthlyUsage } from "./usage";
@@ -20,13 +19,6 @@ export async function tooManyActiveJobs(c: Context<App>, userId: string) {
   return c.json({ error: `your ${row?.plan ?? "free"} plan runs ${allowed} video${allowed === 1 ? "" : "s"} at a time: wait for one to finish` }, 429);
 }
 
-async function keyOutOfMinutes(c: Context<App>, owner: Owner) {
-  const limit = owner.keyId && c.get("auth")?.keyId === owner.keyId ? c.get("auth").minuteLimit : null;
-  if (!owner.keyId || !limit) return null;
-  if ((await keyUsedSeconds(c.env, owner.keyId)) < limit * 60) return null;
-  return c.json({ error: `this API key's limit of ${limit} export minute${limit === 1 ? "" : "s"} this month is used: raise it in the Clep dashboard (API Keys)` }, 402);
-}
-
 export async function refuseNewJob(c: Context<App>, owner: Owner, metered: boolean) {
-  return (await tooManyActiveJobs(c, owner.userId)) ?? (metered ? (await keyOutOfMinutes(c, owner)) ?? (await outOfMinutes(c, owner.userId)) : null);
+  return (await tooManyActiveJobs(c, owner.userId)) ?? (metered ? await outOfMinutes(c, owner.userId) : null);
 }

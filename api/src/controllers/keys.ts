@@ -1,39 +1,37 @@
 import type { Context } from "hono";
-import { issueKey, listKeys, revokeOwnKey, rotateKey, updateKey, type KeySettings } from "../keys";
+import { EXPIRY_DAYS, issueKey, listKeys, revokeOwnKey, rotateKey, updateKey, type KeySettings } from "../keys";
 import { limitsOf } from "../plans";
 import type { App, Plan } from "../types";
 import { monthlyUsage } from "../usage";
 
 const MAX_LABEL = 60;
-const MAX_MINUTE_LIMIT = 100_000;
 const DEFAULT_LABEL = "Untitled key";
 
-type KeyBody = { label?: unknown; minute_limit?: unknown; disabled?: unknown };
+type KeyBody = { label?: unknown; expires_in_days?: unknown; disabled?: unknown };
+type Parsed = { settings: KeySettings; expiresInDays: number | null };
 
-function settingsFrom(body: KeyBody): KeySettings | string {
+function parse(body: KeyBody): Parsed | string {
   const settings: KeySettings = {};
   if (body.label !== undefined) {
     if (typeof body.label !== "string" || body.label.trim().length > MAX_LABEL) return `label must be text up to ${MAX_LABEL} characters`;
     settings.label = body.label.trim() || DEFAULT_LABEL;
   }
-  if (body.minute_limit !== undefined) {
-    const limit = body.minute_limit;
-    const valid = limit === null || (Number.isInteger(limit) && (limit as number) >= 1 && (limit as number) <= MAX_MINUTE_LIMIT);
-    if (!valid) return `minute_limit must be a whole number of minutes from 1 to ${MAX_MINUTE_LIMIT}, or null for the plan's limit`;
-    settings.minuteLimit = limit as number | null;
-  }
   if (body.disabled !== undefined) {
     if (typeof body.disabled !== "boolean") return "disabled must be true or false";
     settings.disabled = body.disabled;
   }
-  return settings;
+  const days = body.expires_in_days ?? null;
+  if (days !== null && !EXPIRY_DAYS.includes(days as number)) return `expires_in_days must be one of ${EXPIRY_DAYS.join(", ")}, or null for no expiration`;
+  return { settings, expiresInDays: days as number | null };
 }
 
 const readBody = (c: Context<App>) => c.req.json<KeyBody>().catch(() => ({} as KeyBody));
 
 const view = (row: Record<string, unknown>) => ({
-  id: row.id, label: row.label, prefix: row.prefix, last4: row.last4, minute_limit: row.minute_limit,
-  disabled: row.disabled_at !== null, used_seconds: Number(row.used_seconds ?? 0),
+  id: row.id, label: row.label, prefix: row.prefix, last4: row.last4,
+  disabled: row.disabled_at !== null, expires_at: row.expires_at,
+  expired: row.expires_at !== null && new Date(row.expires_at as string).getTime() <= Date.now(),
+  used_seconds: Number(row.used_seconds ?? 0),
   created_at: row.created_at, last_used_at: row.last_used_at,
 });
 
@@ -49,20 +47,20 @@ export async function list(c: Context<App>) {
 
 export async function create(c: Context<App>) {
   const user = c.get("session");
-  const settings = settingsFrom(await readBody(c));
-  if (typeof settings === "string") return c.json({ error: settings }, 400);
+  const parsed = parse(await readBody(c));
+  if (typeof parsed === "string") return c.json({ error: parsed }, 400);
   const plan = (await monthlyUsage(c.env, user.id)).plan as Plan;
   const cap = limitsOf(plan).keys;
-  const created = await issueKey(c.env, user.id, ["clep"], settings.label ?? DEFAULT_LABEL, settings.minuteLimit ?? null, cap);
+  const created = await issueKey(c.env, user.id, ["clep"], parsed.settings.label ?? DEFAULT_LABEL, parsed.expiresInDays, cap);
   if (!created) return c.json({ error: `your ${plan} plan allows ${cap} active keys: revoke one first` }, 409);
   return c.json({ ...view(created), key: created.key }, 201);
 }
 
 export async function update(c: Context<App>) {
-  const settings = settingsFrom(await readBody(c));
-  if (typeof settings === "string") return c.json({ error: settings }, 400);
-  if (!Object.keys(settings).length) return c.json({ error: "send label, minute_limit or disabled" }, 400);
-  const updated = await updateKey(c.env, c.get("session").id, c.req.param("id")!, settings);
+  const parsed = parse(await readBody(c));
+  if (typeof parsed === "string") return c.json({ error: parsed }, 400);
+  if (!Object.keys(parsed.settings).length) return c.json({ error: "send label or disabled" }, 400);
+  const updated = await updateKey(c.env, c.get("session").id, c.req.param("id")!, parsed.settings);
   return updated ? c.json({ ok: true }) : c.json({ error: "no such key (it may have been revoked or regenerated)" }, 404);
 }
 
